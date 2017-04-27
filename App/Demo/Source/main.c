@@ -127,13 +127,7 @@
 #define mainGPS_DELAY ((TickType_t)5000 / portTICK_PERIOD_MS)
 #define mainLED_BLINK_DELAY (500)
 
-#define GPRS_HEAD_CMD "????"
-#define GPRS_END_CMD "$$$$"
 
-//#define IP_SERVER "42.115.190.28"
-//#define IP_SERVER  "118.71.231.148"
-#define IP_SERVER "42.112.151.79"
-#define PORT "8888"
 #define GPRS_BLOCK_TIME 5000
 #define GPRS_BUFFER_SIZE 200
 
@@ -145,28 +139,55 @@ typedef struct RELAY_Output
     u16             pin;
 }RELAY_Output_t;
 
-RELAY_Output_t RELAY_OUTPUT_MAPPING[] = 
+typedef struct KEYBOARD_Input
 {
-    {GPIOB,GPIO_Pin_0},
-    {GPIOB,GPIO_Pin_1},
-    {GPIOB,GPIO_Pin_2},
-    {GPIOB,GPIO_Pin_3},
-    {GPIOB,GPIO_Pin_4},
-    {GPIOB,GPIO_Pin_5},
-    {GPIOB,GPIO_Pin_6},
-    {GPIOB,GPIO_Pin_7},
-    {GPIOB,GPIO_Pin_8},
-    {GPIOB,GPIO_Pin_9},
-    {GPIOB,GPIO_Pin_10},
-    {GPIOB,GPIO_Pin_11},
-    {GPIOB,GPIO_Pin_12},
-};
+    GPIO_TypeDef    port;
+    u16             pin;
+}KEYBOARD_Input_t;
 
 typedef struct TimerSetting
 {
     unsigned int uiTON;
     unsigned int uiTOFF;
 }TimerSetting_t;
+
+RELAY_Output_t RELAY_OUTPUT_MAPPING[] = 
+{
+    {GPIOB, GPIO_Pin_0},
+    {GPIOB, GPIO_Pin_1},
+    {GPIOB, GPIO_Pin_2},
+    {GPIOB, GPIO_Pin_3},
+    {GPIOB, GPIO_Pin_4},
+    {GPIOB, GPIO_Pin_5},
+    {GPIOB, GPIO_Pin_6},
+    {GPIOB, GPIO_Pin_7},
+    {GPIOB, GPIO_Pin_8},
+    {GPIOB, GPIO_Pin_9},
+    {GPIOB, GPIO_Pin_10},
+    {GPIOB, GPIO_Pin_11},
+    {GPIOB, GPIO_Pin_12},
+};
+
+KEYBOARD_Input_t KEY_GPIO_MAPPING[] = 
+{
+    {GPIOA, GPIO_Pin_0},
+    {GPIOA, GPIO_Pin_1},
+    {GPIOA, GPIO_Pin_2}    
+};
+
+enum
+{
+    KEY_UP = 0,
+    KEY_DOWN,
+    KEY_ENTER,
+    KEY_MAX
+};
+
+enum
+{
+
+}
+
 /*-----------------------------------------------------------*/
 
 /*
@@ -198,7 +219,8 @@ int fputc(int ch, FILE *f);
 static void vKeyboardTask(void *pvParameters)
 static void vLCDTask(void *pvParameters);
 static void vRelayTask(void *pvParameters);
-
+u16 FindKeyBoard(u8);
+void ChangingNumber(u8 *number)
 /*
  * Configures the timers and interrupts for the fast interrupt test as
  * described at the top of this file.
@@ -262,16 +284,21 @@ int main(void)
 /*Keyboard task*/
 static void vKeyboardTask(void *pvParameters)
 {
-    GPIO_ReadInputDataBit(GPIO_TypeDef* GPIOx, u16 GPIO_Pin)
-}
-/*LCD task*/
 
+    while(true)
+    {
+
+    }
+}
+
+/*RELAY task*/
 static void vRelayTask(void *pvParameters)
 {
-    TimerSetting stTimeset;
+    static TimerSetting stTimeset;
     int rl_scan_idx;
     while(true)
     {
+        xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 );
         for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
         {
             GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, BIT_SET);
@@ -281,7 +308,7 @@ static void vRelayTask(void *pvParameters)
         }        
     }
 }
-
+/*LCD task*/
 static void vLCDTask(void *pvParameters)
 {
     // int LCD here
@@ -291,8 +318,6 @@ static void vLCDTask(void *pvParameters)
         {
 
         }
-
-        
     }
 }
 /*-----------------------------------------------------------*/
@@ -376,8 +401,45 @@ static void prvSetupHardware(void)
     // vParTestInitialise();
 }
 
+u16 FindKeyBoard(u8 keepingKEY)
+{
+    u8 idx_key;
 
+    for(idx_key = 0 ; idx_key < KEY_MAX;idx_key++)
+    {
+        if(BIT_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin))
+        {
+            if(!keepingKEY)
+            {
+                while(BIT_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin));    
+            }            
+            return idx_key;
+        }
+    }
+    return KEY_MAX;
+}
 
+void ChangingNumber(u8 *number)
+{
+    u16 key;
+    u8 tmp_num = *number;
+    key = FindKeyBoard(0);
+    if(KEY_UP == key)
+    {
+        if(tmp_num++ == 10)
+        {
+            tmp_num = 0;
+        }
+    }
+    else if(KEY_DOWN == key)
+    {
+        if( --tmp_num == 0)
+        {
+            tmp_num = 0;
+        }
+    }
+    *number = tmp_num;
+}
 /*-----------------------------------------------------------*/
 
 void error_lcd_printf()
