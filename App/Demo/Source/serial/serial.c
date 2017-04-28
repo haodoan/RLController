@@ -157,7 +157,7 @@ xComPortHandle xSerialPortInitMinimal(USART_TypeDef * base,uart_rtos_handle_t *h
             NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQChannel;
         }
 
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNfalseEL_INTERRUPT_PRIORITY;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = configLIBRARY_KERNEL_INTERRUPT_PRIORITY;
         NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
         NVIC_Init( &NVIC_InitStructure );

@@ -116,32 +116,32 @@
 #include "sim908.h"
 #include "lcd_nokia5110/nokia_5110.h"
 /* Task priorities. */
-#define mainGPS_TASK_PRIORITY (tskIDLE_PRIORITY + 3)
-#define mainGPRS_TASK_PRIORITY (tskIDLE_PRIORITY + 4)
-#define mainLED_TASK_PRIORITY (tskIDLE_PRIORITY)
+#define mainRELAY_TASK_PRIORITY     (tskIDLE_PRIORITY + 3)
+#define mainKEYBOARD_TASK_PRIORITY  (tskIDLE_PRIORITY + 4)
+#define mainLED_TASK_PRIORITY       (tskIDLE_PRIORITY)
 /* The check task uses the sprintf function so requires a little more stack. */
-#define mainGPS_TASK_STACK_SIZE (configMINIMAL_STACK_SIZE + 128)
-#define mainGPRS_TASK_STACK_SIZE (configMINIMAL_STACK_SIZE + 128)
-#define mainLED_TASK_STACK_SIZE (configMINIMAL_STACK_SIZE)
+#define mainRELAY_TASK_STACK_SIZE       (configMINIMAL_STACK_SIZE + 128)
+#define mainKEYBOARD_TASK_STACK_SIZE    (configMINIMAL_STACK_SIZE + 128)
+#define mainLED_TASK_STACK_SIZE         (configMINIMAL_STACK_SIZE)
 /* The time between cycles of the 'check' task. */
 #define mainGPS_DELAY ((TickType_t)5000 / portTICK_PERIOD_MS)
 #define mainLED_BLINK_DELAY (500)
 
 
-#define GPRS_BLOCK_TIME 5000
+#define RELAY_BLOCK_TIME 5000
 #define GPRS_BUFFER_SIZE 200
 
-#define GPS_BLOCK_TIME 5000
+#define RL_NUMBER_MAX   12
 
 typedef struct RELAY_Output
 {
-    GPIO_TypeDef    port;
+    GPIO_TypeDef*    port;
     u16             pin;
 }RELAY_Output_t;
 
 typedef struct KEYBOARD_Input
 {
-    GPIO_TypeDef    port;
+    GPIO_TypeDef *   port;
     u16             pin;
 }KEYBOARD_Input_t;
 
@@ -185,8 +185,20 @@ enum
 
 enum
 {
-
-}
+    TON_SET = 0,
+    TOFF_SET,
+    OK_SET,
+    MAX_SET
+};
+enum
+{
+    THOUS,
+    HUNDERD,
+    TENTH,
+    UNITS,
+    UNIT,
+    MAX_NUM
+};
 
 /*-----------------------------------------------------------*/
 
@@ -216,11 +228,11 @@ int fputc(int ch, FILE *f);
  * Messages are not written directly to the terminal, but passed to vLCDTask
  * via a queue.
  */
-static void vKeyboardTask(void *pvParameters)
+static void vKeyboardTask(void *pvParameters);
 static void vLCDTask(void *pvParameters);
 static void vRelayTask(void *pvParameters);
 u16 FindKeyBoard(u8);
-void ChangingNumber(u8 *number)
+void ChangingNumber(u8 *number, u8 key);
 /*
  * Configures the timers and interrupts for the fast interrupt test as
  * described at the top of this file.
@@ -271,7 +283,7 @@ int main(void)
 
     /* Start the tasks defined within this file/specific to this demo. */
     // xTaskCreate( vGPSTask, "GPS", mainGPS_TASK_STACK_SIZE, NULL, mainGPS_TASK_PRIORITY, NULL );
-    xTaskCreate(vGPRSTask, "GPRS", mainGPRS_TASK_STACK_SIZE, NULL, mainGPRS_TASK_PRIORITY, NULL);
+    xTaskCreate(vKeyboardTask, "KEYBOARD", mainKEYBOARD_TASK_STACK_SIZE, NULL, mainKEYBOARD_TASK_PRIORITY, NULL);
 
     /* Start the scheduler. */
     vTaskStartScheduler();
@@ -284,26 +296,129 @@ int main(void)
 /*Keyboard task*/
 static void vKeyboardTask(void *pvParameters)
 {
+    static u8 row_offset = 0;
+    static u8 offset = 0;
+    static u8 KeyEnter = 0;
+    static u8 nghin,tram,chuc,dv,unit;
+    u8 key;
+    TimerSetting_t stTimeSet;
 
-    while(true)
+    while(TRUE)
     {
+        key = FindKeyBoard(0);
+        if(KeyEnter == 0)
+        {
+            switch(key)
+            {
+                case KEY_UP :
+                    if(row_offset++ == MAX_SET) row_offset = 0;
+                    break;
+                case KEY_DOWN:
+                    if(row_offset-- == 0) row_offset = MAX_SET;
+                    break;
+                case KEY_ENTER:
+                    //Send offset
+                    KeyEnter = 1;
+                    break;
+            }        
+        }
 
+        if(KeyEnter == 1)
+        {
+            switch(key)
+            {
+                case KEY_UP :
+                    //if(row_offset++ == MAX_NUM) offset = 0;
+                    break;
+                case KEY_DOWN:
+                    //if(row_offset-- == 0) offset = MAX_NUM;
+                    break;
+                case KEY_ENTER:
+                    //Send offset
+                    KeyEnter = 2;
+                    break;
+            }
+        }
+        if(KeyEnter == 2)
+        {
+            switch(offset)
+            {
+                case THOUS:
+                    ChangingNumber(&nghin,key);
+                    break;
+                case HUNDERD:
+                    ChangingNumber(&tram,key);
+                    break;
+                case TENTH:
+                    ChangingNumber(&chuc,key);
+                    break;
+                case UNITS:
+                    ChangingNumber(&dv,key);
+                    break;
+                case UNIT:
+                    ChangingNumber(&unit,key);
+                    break;                                                                
+            }
+            if(key == KEY_ENTER) 
+            {
+                 if(row_offset++ == MAX_NUM)
+                 {
+                    //KeyEnter = 1;
+                    if(row_offset == 1)
+                    {
+                         stTimeSet.uiTON = nghin*1000+ tram*100 + chuc*10 + dv;
+                    }
+                    else if(row_offset == 2)
+                    {
+                         stTimeSet.uiTOFF = nghin*1000+ tram*100 + chuc*10 + dv;
+                    }
+                     else if(row_offset == 3)
+                     {
+                        KeyEnter = 3;
+                     }
+                 }
+               
+            }
+        }
+        if(KeyEnter == 3)
+        {
+            static u8 SettingAccept = FALSE;
+            switch(key)
+            {
+                case KEY_UP :
+                        //LCD print OK
+                    SettingAccept = TRUE;
+                    break;
+                case KEY_DOWN:
+                    ////LCD print CACEL
+                    SettingAccept = FALSE;
+                    break;
+                case KEY_ENTER:
+                    if(SettingAccept)
+                    {
+                        // Send message queue Time setting to RELAY task
+                    }
+                    //Send offset
+                    KeyEnter = 0;
+                    break;
+            }
+        }    
     }
 }
 
 /*RELAY task*/
 static void vRelayTask(void *pvParameters)
 {
-    static TimerSetting stTimeset;
+    static TimerSetting_t stTimeset;
     int rl_scan_idx;
-    while(true)
+    while(TRUE)
     {
         xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 );
         for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
         {
-            GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, BIT_SET);
+            GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_SET);
             vTaskDelay(stTimeset.uiTON);
-            GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, BIT_RESET);
+            GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_RESET);
             vTaskDelay(stTimeset.uiTOFF);             
         }        
     }
@@ -312,15 +427,54 @@ static void vRelayTask(void *pvParameters)
 static void vLCDTask(void *pvParameters)
 {
     // int LCD here
-    while(true)
+    while(TRUE)
     {
-        if( xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ) )
+        //if( xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ) )
         {
 
         }
     }
 }
 /*-----------------------------------------------------------*/
+
+u16 FindKeyBoard(u8 keepingKEY)
+{
+    u8 idx_key;
+
+    for(idx_key = 0 ; idx_key < KEY_MAX;idx_key++)
+    {
+        if(Bit_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin))
+        {
+            if(!keepingKEY)
+            {
+                while(Bit_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin));    
+            }            
+            return idx_key;
+        }
+    }
+    return KEY_MAX;
+}
+
+
+void ChangingNumber(u8 *number,u8 key)
+{
+    u8 tmp_num = *number;
+    if(KEY_UP == key)
+    {
+        if(tmp_num++ == 10)
+        {
+            tmp_num = 0;
+        }
+    }
+    else if(KEY_DOWN == key)
+    {
+        if( --tmp_num == 0)
+        {
+            tmp_num = 0;
+        }
+    }
+    *number = tmp_num;
+}
 
 static void prvSetupHardware(void)
 {
@@ -380,7 +534,7 @@ static void prvSetupHardware(void)
     /* Configure HCLK clock as SysTick clock source. */
     SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
 
-    xSerialPortInitMinimal(USART2, &uart2_handle, 115200, MAX_LENGH_STR);
+  //  xSerialPortInitMinimal(USART2, &uart2_handle, 115200, MAX_LENGH_STR);
 
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_5 | GPIO_Pin_7;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -401,45 +555,6 @@ static void prvSetupHardware(void)
     // vParTestInitialise();
 }
 
-u16 FindKeyBoard(u8 keepingKEY)
-{
-    u8 idx_key;
-
-    for(idx_key = 0 ; idx_key < KEY_MAX;idx_key++)
-    {
-        if(BIT_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin))
-        {
-            if(!keepingKEY)
-            {
-                while(BIT_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin));    
-            }            
-            return idx_key;
-        }
-    }
-    return KEY_MAX;
-}
-
-void ChangingNumber(u8 *number)
-{
-    u16 key;
-    u8 tmp_num = *number;
-    key = FindKeyBoard(0);
-    if(KEY_UP == key)
-    {
-        if(tmp_num++ == 10)
-        {
-            tmp_num = 0;
-        }
-    }
-    else if(KEY_DOWN == key)
-    {
-        if( --tmp_num == 0)
-        {
-            tmp_num = 0;
-        }
-    }
-    *number = tmp_num;
-}
 /*-----------------------------------------------------------*/
 
 void error_lcd_printf()
@@ -452,7 +567,7 @@ int fputc(int ch, FILE *f)
 {
     /* Place your implementation of fputc here */
     /* e.g. write a character to the USART */
-    xSerialPutChar(&uart2_handle, ch, 0);
+   // xSerialPutChar(&uart2_handle, ch, 0);
 
     return ch;
 }
