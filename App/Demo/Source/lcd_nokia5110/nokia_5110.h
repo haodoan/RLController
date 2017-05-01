@@ -36,12 +36,14 @@
 
 extern void LCD_init(void);
 extern void LCD_clear(void);
-extern void LCD_write_string(unsigned char X,unsigned char Y,char *s);
+extern void LCD_write_string(unsigned char X,unsigned char Y,char *s,unsigned char invert);
 extern void LCD_write_char(unsigned char c);
 extern void LCD_draw_bmp_pixel(unsigned char X,unsigned char Y,unsigned char *map,
                                unsigned char Pix_x,unsigned char Pix_y);
 extern void LCD_write_byte(unsigned char dat, unsigned char dc);
 extern void delay_1us(void);
+extern void LCD_cursor(unsigned char X, unsigned char Y);
+extern void LCD_write_char_invert(unsigned char c);
 void delay_1m(void)  ;
 void delay_nms(unsigned int n);
 void LCD_set_XY(unsigned char X, unsigned char Y);

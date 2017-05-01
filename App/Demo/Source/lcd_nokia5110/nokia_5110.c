@@ -5,13 +5,14 @@
 
 void LCD_init(void);
 void LCD_clear(void);
-void LCD_write_string(unsigned char X,unsigned char Y,char *s);
+void LCD_write_string(unsigned char X,unsigned char Y,char *s,unsigned char invert);
 void LCD_write_char(unsigned char c);
 void LCD_draw_bmp_pixel(unsigned char X,unsigned char Y,unsigned char *map,
                         unsigned char Pix_x,unsigned char Pix_y);
 void LCD_write_byte(unsigned char dat, unsigned char dc);
 void delay_1us(void);
-
+void LCD_cursor(unsigned char X, unsigned char Y);
+void LCD_write_char_invert(unsigned char c);
 /*-----------------------------------------------------------------------
 LCD_init          : 3310LCD初始化
 
@@ -95,8 +96,20 @@ LCD_set_XY        : 设置LCD坐标函数
 -----------------------------------------------------------------------*/
 void LCD_set_XY(unsigned char X, unsigned char Y)
 {
-    LCD_write_byte(0x40 | Y, 0);		// column
-    LCD_write_byte(0x80 | X, 0);          	// row
+    LCD_write_byte(0x80 | 6*Y, 0);		// column
+    LCD_write_byte(0x40 | X, 0);          	// row
+}
+
+void LCD_cursor(unsigned char X, unsigned char Y)
+{
+    char space =' ';
+    unsigned char line;
+
+    space -=32;
+    LCD_set_XY(X,Y);
+
+    for (line=0; line<6; line++)
+        LCD_write_byte(~font6x8[space][line], 1);
 }
 
 /*-----------------------------------------------------------------------
@@ -117,6 +130,15 @@ void LCD_write_char(unsigned char c)
         LCD_write_byte(font6x8[c][line], 1);
 }
 
+void LCD_write_char_invert(unsigned char c)
+{
+    unsigned char line;
+
+    c -= 32;
+
+    for (line=0; line<6; line++)
+        LCD_write_byte(~font6x8[c][line], 1);
+}
 /*-----------------------------------------------------------------------
 LCD_write_String  : 英文字符串显示函数
 
@@ -126,12 +148,12 @@ LCD_write_String  : 英文字符串显示函数
 编写日期          ：2004-8-10
 最后修改日期      ：2004-8-10
 -----------------------------------------------------------------------*/
-void LCD_write_string(unsigned char X,unsigned char Y,char *s)
+void LCD_write_string(unsigned char X,unsigned char Y,char *s,unsigned char invert)
 {
     LCD_set_XY(X,Y);
     while (*s)
     {
-        LCD_write_char(*s);
+        (invert == 0)?LCD_write_char(*s):LCD_write_char_invert(*s);
         s++;
     }
 }

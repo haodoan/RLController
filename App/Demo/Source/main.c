@@ -170,9 +170,9 @@ RELAY_Output_t RELAY_OUTPUT_MAPPING[] =
 
 KEYBOARD_Input_t KEY_GPIO_MAPPING[] = 
 {
-    {GPIOA, GPIO_Pin_0},
-    {GPIOA, GPIO_Pin_1},
-    {GPIOA, GPIO_Pin_2}    
+    {GPIOC, GPIO_Pin_0},
+    {GPIOC, GPIO_Pin_2},
+    {GPIOC, GPIO_Pin_4}    
 };
 
 enum
@@ -233,6 +233,7 @@ static void vLCDTask(void *pvParameters);
 static void vRelayTask(void *pvParameters);
 u16 FindKeyBoard(u8);
 void ChangingNumber(u8 *number, u8 key);
+void DisplayCursorStr(int row);
 /*
  * Configures the timers and interrupts for the fast interrupt test as
  * described at the top of this file.
@@ -265,25 +266,32 @@ int main(void)
 
     LCD_init();
     LCD_clear();
-    LCD_write_string(0, 2, "    DEMO      ");
-    LCD_write_string(0, 3, "Controlling");
-
+    //LCD_write_string(0, 2, "    DEMO      ");
+    //LCD_write_string(0, 3, "Controlling");
+    //LCD_cursor(0,0);
+    //LCD_write_string(0, 0, "1234567890123456");
+    LCD_write_string(0, 0, "SETTING TIME",0);
+    LCD_write_string(2, 0, "TON  :1234 ms",0);
+    LCD_write_string(3, 0, "TOFF :5678 ms",0);
+    LCD_write_string(4, 6, "OK",0);
+ 
     qTLTimeOnOff = xQueueCreate(20, sizeof(TimerSetting_t));
     if (qTLTimeOnOff == NULL)
     {
-        LCD_write_string(0, 3, "QUEUE MEM fAIL");
+        LCD_write_string(0, 3, "QUEUE MEM fAIL",0);
         while (TRUE);
     }
     SIM908_Mutex = xSemaphoreCreateMutex();
     if( SIM908_Mutex == NULL )
     {
-        LCD_write_string(0, 3, "MUTEX MEM fAIL");
+        LCD_write_string(0, 3, "MUTEX MEM fAIL",0);
         while(1);
     }
 
     /* Start the tasks defined within this file/specific to this demo. */
     // xTaskCreate( vGPSTask, "GPS", mainGPS_TASK_STACK_SIZE, NULL, mainGPS_TASK_PRIORITY, NULL );
     xTaskCreate(vKeyboardTask, "KEYBOARD", mainKEYBOARD_TASK_STACK_SIZE, NULL, mainKEYBOARD_TASK_PRIORITY, NULL);
+    xTaskCreate(vRelayTask, "RELAY", mainRELAY_TASK_STACK_SIZE, NULL, mainRELAY_TASK_PRIORITY, NULL);
 
     /* Start the scheduler. */
     vTaskStartScheduler();
@@ -297,17 +305,33 @@ int main(void)
 static void vKeyboardTask(void *pvParameters)
 {
     static u8 row_offset = 0;
-    static u8 offset = 0;
+    static u8 num_offset = 0;
     static u8 KeyEnter = 0;
     static u8 nghin,tram,chuc,dv,unit;
+    static u8 time_unit = 0;
     u8 key;
     TimerSetting_t stTimeSet;
-
+    char buff[5] = {0};
     while(TRUE)
     {
-        key = FindKeyBoard(0);
+        //LCD_write_string(2 + row_offset, num_offset + 6, buff,1);
+        do
+        {
+            key = FindKeyBoard(0);
+            vTaskDelay(100);  
+        }while(KEY_MAX == key);
         if(KeyEnter == 0)
         {
+            if(KEY_ENTER == key)
+            {
+                KeyEnter = 2;
+                key  = KEY_MAX;
+            }       
+        }
+
+        else if(KeyEnter == 1)
+        {
+            DisplayCursorStr(row_offset);          
             switch(key)
             {
                 case KEY_UP :
@@ -318,79 +342,113 @@ static void vKeyboardTask(void *pvParameters)
                     break;
                 case KEY_ENTER:
                     //Send offset
-                    KeyEnter = 1;
-                    break;
-            }        
-        }
-
-        if(KeyEnter == 1)
-        {
-            switch(key)
-            {
-                case KEY_UP :
-                    //if(row_offset++ == MAX_NUM) offset = 0;
-                    break;
-                case KEY_DOWN:
-                    //if(row_offset-- == 0) offset = MAX_NUM;
-                    break;
-                case KEY_ENTER:
-                    //Send offset
                     KeyEnter = 2;
+                    key = KEY_MAX;
                     break;
             }
+
+            //continue;
         }
-        if(KeyEnter == 2)
+        else if(KeyEnter == 2)
         {
-            switch(offset)
+            //char buff[5] = {0};
+            switch(num_offset)
             {
                 case THOUS:
                     ChangingNumber(&nghin,key);
+                    sprintf(buff,"%d",nghin);
+                    LCD_write_string(row_offset + 2, 6, buff,1);
+                    if(KEY_ENTER == key)
+                    {
+                        LCD_write_string(2, 6, buff,0);
+                    }                    
                     break;
                 case HUNDERD:
                     ChangingNumber(&tram,key);
+                    sprintf(buff,"%d",tram);
+                    LCD_write_string(row_offset + 2, 7, buff,1);
+                    if(KEY_ENTER == key)
+                    {
+                        LCD_write_string(row_offset + 2, 7, buff,0);
+                    }
                     break;
                 case TENTH:
                     ChangingNumber(&chuc,key);
+                    sprintf(buff,"%d",chuc);
+                    LCD_write_string(row_offset + 2, 8, buff,1);
+                    if(KEY_ENTER == key)
+                    {
+                        LCD_write_string(row_offset + 2, 8, buff,0);
+                    }                    
                     break;
                 case UNITS:
                     ChangingNumber(&dv,key);
+                    sprintf(buff,"%d",dv);
+                    LCD_write_string(row_offset + 2, 9, buff,1);
+                    if(KEY_ENTER == key)
+                    {
+                        LCD_write_string(row_offset + 2, 9, buff,0);
+                    }                                        
                     break;
                 case UNIT:
-                    ChangingNumber(&unit,key);
+                    time_unit ? sprintf(buff,"ms"):sprintf(buff," s");                        
+                    LCD_write_string(row_offset + 2, 11, buff,1);                         
+                    if(KEY_UP == key)
+                    {
+                        time_unit = !time_unit;
+                        time_unit ? sprintf(buff,"ms"):sprintf(buff," s");                        
+                        LCD_write_string(row_offset + 2, 11, buff,1);                         
+
+                    }
+                    if(KEY_ENTER == key)
+                    {
+                        LCD_write_string(row_offset + 2, 11, buff,0);
+                    }
                     break;                                                                
             }
             if(key == KEY_ENTER) 
             {
-                 if(row_offset++ == MAX_NUM)
-                 {
+                //sprintf(buff,"%d",nghin);
+                //LCD_write_string(2, num_offset+6, buff,0);                
+                if(num_offset++ == MAX_NUM)
+                {
                     //KeyEnter = 1;
-                    if(row_offset == 1)
+                    num_offset = 0;
+                    if(row_offset == 0)
                     {
                          stTimeSet.uiTON = nghin*1000+ tram*100 + chuc*10 + dv;
                     }
-                    else if(row_offset == 2)
+                    else if(row_offset == 1)
                     {
                          stTimeSet.uiTOFF = nghin*1000+ tram*100 + chuc*10 + dv;
                     }
-                     else if(row_offset == 3)
-                     {
+                    else if(row_offset == 3)
+                    {
                         KeyEnter = 3;
-                     }
+                    }
+                    row_offset++;                    
                  }
+                 if(num_offset != UNIT)
+                 {
+                    LCD_write_string(2 + row_offset, num_offset + 6, buff,1);   
+                 }
+                 
                
             }
         }
-        if(KeyEnter == 3)
+        else if(KeyEnter == 3)
         {
             static u8 SettingAccept = FALSE;
             switch(key)
             {
                 case KEY_UP :
                         //LCD print OK
+                    LCD_write_string(4, 6, "OK",1);                   
                     SettingAccept = TRUE;
                     break;
                 case KEY_DOWN:
                     ////LCD print CACEL
+                    LCD_write_string(4, 6, "CACEL",1);
                     SettingAccept = FALSE;
                     break;
                 case KEY_ENTER:
@@ -402,7 +460,8 @@ static void vKeyboardTask(void *pvParameters)
                     KeyEnter = 0;
                     break;
             }
-        }    
+        } 
+        //vTaskDelay(100);   
     }
 }
 
@@ -443,11 +502,11 @@ u16 FindKeyBoard(u8 keepingKEY)
 
     for(idx_key = 0 ; idx_key < KEY_MAX;idx_key++)
     {
-        if(Bit_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin))
+        if(Bit_RESET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin))
         {
-            if(!keepingKEY)
+            //if(!keepingKEY)
             {
-                while(Bit_SET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin));    
+                while(Bit_RESET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin));    
             }            
             return idx_key;
         }
@@ -461,21 +520,46 @@ void ChangingNumber(u8 *number,u8 key)
     u8 tmp_num = *number;
     if(KEY_UP == key)
     {
-        if(tmp_num++ == 10)
+        if(tmp_num++ == 9)
         {
             tmp_num = 0;
         }
     }
     else if(KEY_DOWN == key)
     {
-        if( --tmp_num == 0)
+        if( tmp_num-- == 0)
         {
-            tmp_num = 0;
+            tmp_num = 9;
         }
+    }
+    else if(KEY_ENTER == key)
+    {
+
     }
     *number = tmp_num;
 }
 
+char *Menu[] = 
+{
+    "TON",
+    "TOFF",
+    "OK"
+};
+void DisplayCursorStr(int row)
+{
+    int i;
+    for (i = 0; i < 3; i++)
+    {
+        if(i == row) 
+        {
+            LCD_write_string(i+2,0,Menu[i],1);
+        }else
+        {
+            LCD_write_string(i+2,0,Menu[i],0);    
+        }
+        
+    }
+}
 static void prvSetupHardware(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -553,13 +637,17 @@ static void prvSetupHardware(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_Init(GPIOB, &GPIO_InitStructure);
     // vParTestInitialise();
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_2 | GPIO_Pin_4;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_Init(GPIOC, &GPIO_InitStructure);    
 }
 
 /*-----------------------------------------------------------*/
 
 void error_lcd_printf()
 {
-    LCD_write_string(0, 3, "FAIL...");
+    LCD_write_string(0, 3, "FAIL...",0);
     while (TRUE)
         ;
 }
