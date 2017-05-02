@@ -266,14 +266,12 @@ int main(void)
 
     LCD_init();
     LCD_clear();
-    //LCD_write_string(0, 2, "    DEMO      ");
-    //LCD_write_string(0, 3, "Controlling");
-    //LCD_cursor(0,0);
-    //LCD_write_string(0, 0, "1234567890123456");
+
     LCD_write_string(0, 0, "SETTING TIME",0);
     LCD_write_string(2, 0, "TON  :1234 ms",0);
     LCD_write_string(3, 0, "TOFF :5678 ms",0);
     LCD_write_string(4, 6, "OK",0);
+
  
     qTLTimeOnOff = xQueueCreate(20, sizeof(TimerSetting_t));
     if (qTLTimeOnOff == NULL)
@@ -320,12 +318,14 @@ static void vKeyboardTask(void *pvParameters)
             key = FindKeyBoard(0);
             vTaskDelay(100);  
         }while(KEY_MAX == key);
+
         if(KeyEnter == 0)
         {
             if(KEY_ENTER == key)
             {
                 KeyEnter = 2;
                 key  = KEY_MAX;
+                LCD_write_number(row_offset + 2,6,nghin,1);                
             }       
         }
 
@@ -356,94 +356,97 @@ static void vKeyboardTask(void *pvParameters)
             {
                 case THOUS:
                     ChangingNumber(&nghin,key);
-                    sprintf(buff,"%d",nghin);
-                    LCD_write_string(row_offset + 2, 6, buff,1);
+                    LCD_write_number(row_offset + 2,6,nghin,1);
                     if(KEY_ENTER == key)
                     {
-                        LCD_write_string(2, 6, buff,0);
+                        //LCD_write_string(2 + row_offset, 6, buff,0);
+                        //LCD_write_string(2 + row_offset, num_offset + 6, buff,1); 
+                        LCD_write_number(row_offset + 2,6,nghin,0);
+                        LCD_write_number(row_offset + 2,7,tram,1);
                     }                    
                     break;
                 case HUNDERD:
                     ChangingNumber(&tram,key);
-                    sprintf(buff,"%d",tram);
-                    LCD_write_string(row_offset + 2, 7, buff,1);
+                    LCD_write_number(row_offset + 2,7,tram,1);
                     if(KEY_ENTER == key)
                     {
-                        LCD_write_string(row_offset + 2, 7, buff,0);
+                        //LCD_write_string(row_offset + 2, 7, buff,0);
+                        LCD_write_number(row_offset + 2,7,tram,0);
+                        LCD_write_number(row_offset + 2,8,chuc,1);
                     }
                     break;
                 case TENTH:
                     ChangingNumber(&chuc,key);
-                    sprintf(buff,"%d",chuc);
-                    LCD_write_string(row_offset + 2, 8, buff,1);
+                    LCD_write_number(row_offset + 2,8,chuc,1);
                     if(KEY_ENTER == key)
                     {
-                        LCD_write_string(row_offset + 2, 8, buff,0);
+                        //LCD_write_string(row_offset + 2, 8, buff,0);
+                        LCD_write_number(row_offset + 2,8,chuc,0);
+                        LCD_write_number(row_offset + 2,9,dv,1);                        
                     }                    
                     break;
                 case UNITS:
                     ChangingNumber(&dv,key);
-                    sprintf(buff,"%d",dv);
-                    LCD_write_string(row_offset + 2, 9, buff,1);
+                    LCD_write_number(row_offset + 2,9,dv,1);
                     if(KEY_ENTER == key)
                     {
-                        LCD_write_string(row_offset + 2, 9, buff,0);
+                        LCD_write_number(row_offset + 2,9,dv,0);
+                        time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
+                        LCD_write_string(row_offset + 2, 11, buff,1);                                                 
                     }                                        
                     break;
                 case UNIT:
-                    time_unit ? sprintf(buff,"ms"):sprintf(buff," s");                        
+                    time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
                     LCD_write_string(row_offset + 2, 11, buff,1);                         
                     if(KEY_UP == key)
                     {
                         time_unit = !time_unit;
-                        time_unit ? sprintf(buff,"ms"):sprintf(buff," s");                        
-                        LCD_write_string(row_offset + 2, 11, buff,1);                         
+                        time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
+                        LCD_write_string(row_offset + 2, 11, buff,1); 
 
                     }
                     if(KEY_ENTER == key)
                     {
-                        LCD_write_string(row_offset + 2, 11, buff,0);
-                    }
+                        time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
+                        LCD_write_string(row_offset + 2, 11, buff,0); 
+
+                    }                    
                     break;                                                                
             }
             if(key == KEY_ENTER) 
-            {
-                //sprintf(buff,"%d",nghin);
-                //LCD_write_string(2, num_offset+6, buff,0);                
-                if(num_offset++ == MAX_NUM)
+            {                
+                if(num_offset++ == MAX_NUM -1)
                 {
                     //KeyEnter = 1;
                     num_offset = 0;
                     if(row_offset == 0)
                     {
                          stTimeSet.uiTON = nghin*1000+ tram*100 + chuc*10 + dv;
+                         LCD_write_number(3,6,nghin,1);
+                         //KeyEnter = 0;
                     }
                     else if(row_offset == 1)
                     {
                          stTimeSet.uiTOFF = nghin*1000+ tram*100 + chuc*10 + dv;
-                    }
-                    else if(row_offset == 3)
-                    {
-                        KeyEnter = 3;
+                         KeyEnter = 3;
+                         
                     }
                     row_offset++;                    
-                 }
-                 if(num_offset != UNIT)
-                 {
-                    LCD_write_string(2 + row_offset, num_offset + 6, buff,1);   
-                 }
-                 
+                 }               
                
             }
         }
-        else if(KeyEnter == 3)
+        if(KeyEnter == 3)
         {
             static u8 SettingAccept = FALSE;
+            LCD_write_string(4, 6, "OK",1);
+            LCD_write_string(4, 8, "   ",0);
             switch(key)
             {
                 case KEY_UP :
                         //LCD print OK
-                    LCD_write_string(4, 6, "OK",1);                   
+                    LCD_write_string(4, 6, "OK",1);
+                    LCD_write_string(4, 8, "   ",0);                   
                     SettingAccept = TRUE;
                     break;
                 case KEY_DOWN:
@@ -454,12 +457,15 @@ static void vKeyboardTask(void *pvParameters)
                 case KEY_ENTER:
                     if(SettingAccept)
                     {
+                        LCD_write_string(4, 6, "OK  ",0);
+                        KeyEnter = 0;
                         // Send message queue Time setting to RELAY task
                     }
                     //Send offset
-                    KeyEnter = 0;
+                    //
                     break;
             }
+            row_offset  = 0;
         } 
         //vTaskDelay(100);   
     }

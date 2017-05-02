@@ -2,7 +2,7 @@
 #include "english_6x8_pixel.h"
 #include "stm32f10x_lib.h"
 #include "stm32f10x_gpio.h"
-
+#include <stdio.h>
 void LCD_init(void);
 void LCD_clear(void);
 void LCD_write_string(unsigned char X,unsigned char Y,char *s,unsigned char invert);
@@ -13,6 +13,7 @@ void LCD_write_byte(unsigned char dat, unsigned char dc);
 void delay_1us(void);
 void LCD_cursor(unsigned char X, unsigned char Y);
 void LCD_write_char_invert(unsigned char c);
+void LCD_write_number(unsigned char X,unsigned char Y,unsigned int number,unsigned char invert);
 /*-----------------------------------------------------------------------
 LCD_init          : 3310LCD初始化
 
@@ -156,6 +157,15 @@ void LCD_write_string(unsigned char X,unsigned char Y,char *s,unsigned char inve
         (invert == 0)?LCD_write_char(*s):LCD_write_char_invert(*s);
         s++;
     }
+}
+
+void LCD_write_number(unsigned char X,unsigned char Y, unsigned int number,unsigned char invert)
+{
+    char buff[5];
+
+    sprintf(buff,"%d",number);
+    LCD_set_XY(X,Y);
+    LCD_write_string(X,Y,buff,invert);
 }
 /*-----------------------------------------------------------------------
 LCD_draw_map      : 位图绘制函数

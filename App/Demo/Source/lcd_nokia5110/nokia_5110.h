@@ -44,6 +44,7 @@ extern void LCD_write_byte(unsigned char dat, unsigned char dc);
 extern void delay_1us(void);
 extern void LCD_cursor(unsigned char X, unsigned char Y);
 extern void LCD_write_char_invert(unsigned char c);
+extern void LCD_write_number(unsigned char X,unsigned char Y,unsigned int number,unsigned char invert);
 void delay_1m(void)  ;
 void delay_nms(unsigned int n);
 void LCD_set_XY(unsigned char X, unsigned char Y);
