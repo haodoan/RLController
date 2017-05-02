@@ -255,19 +255,10 @@ int main(void)
 
     prvSetupHardware();
 
-    /* Start the standard demo tasks. */
-    //	vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
-    //	vCreateBlockTimeTasks();
-    //	vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
-    //	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );
-    //	vStartIntegerMathTasks( mainINTEGER_TASK_PRIORITY );
-    //	vStartLEDFlashTasks( mainFLASH_TASK_PRIORITY );
-    //	vAltStartComTestTasks( mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED );
-
     LCD_init();
     LCD_clear();
 
-    LCD_write_string(0, 0, "SETTING TIME",0);
+    LCD_write_string(0, 0, "SETTING TIME",1);
     LCD_write_string(2, 0, "TON  :1234 ms",0);
     LCD_write_string(3, 0, "TOFF :5678 ms",0);
     LCD_write_string(4, 6, "OK",0);
@@ -305,14 +296,17 @@ static void vKeyboardTask(void *pvParameters)
     static u8 row_offset = 0;
     static u8 num_offset = 0;
     static u8 KeyEnter = 0;
-    static u8 nghin,tram,chuc,dv,unit;
+    static u8 nghin[2],tram[2],chuc[2],dv[2],unit[2];
     static u8 time_unit = 0;
     u8 key;
+    u8 SettingAccept = FALSE;
     TimerSetting_t stTimeSet;
     char buff[5] = {0};
+
+    //Read setting from FLASH
     while(TRUE)
     {
-        //LCD_write_string(2 + row_offset, num_offset + 6, buff,1);
+        /* Read key pressed */
         do
         {
             key = FindKeyBoard(0);
@@ -325,72 +319,50 @@ static void vKeyboardTask(void *pvParameters)
             {
                 KeyEnter = 2;
                 key  = KEY_MAX;
-                LCD_write_number(row_offset + 2,6,nghin,1);                
+                LCD_write_number(row_offset + 2,6,nghin[row_offset],1);                
             }       
         }
 
-        else if(KeyEnter == 1)
-        {
-            DisplayCursorStr(row_offset);          
-            switch(key)
-            {
-                case KEY_UP :
-                    if(row_offset++ == MAX_SET) row_offset = 0;
-                    break;
-                case KEY_DOWN:
-                    if(row_offset-- == 0) row_offset = MAX_SET;
-                    break;
-                case KEY_ENTER:
-                    //Send offset
-                    KeyEnter = 2;
-                    key = KEY_MAX;
-                    break;
-            }
-
-            //continue;
-        }
         else if(KeyEnter == 2)
         {
             //char buff[5] = {0};
+            if(row_offset > 1 ) {LCD_write_string(5,0,"ERROR",1);continue;}
             switch(num_offset)
             {
                 case THOUS:
-                    ChangingNumber(&nghin,key);
-                    LCD_write_number(row_offset + 2,6,nghin,1);
+                    ChangingNumber(&nghin[row_offset],key);
+                    LCD_write_number(row_offset + 2,6,nghin[row_offset],1);
                     if(KEY_ENTER == key)
                     {
-                        //LCD_write_string(2 + row_offset, 6, buff,0);
-                        //LCD_write_string(2 + row_offset, num_offset + 6, buff,1); 
-                        LCD_write_number(row_offset + 2,6,nghin,0);
-                        LCD_write_number(row_offset + 2,7,tram,1);
+                        LCD_write_number(row_offset + 2,6,nghin[row_offset],0);
+                        LCD_write_number(row_offset + 2,7,tram[row_offset],1);
                     }                    
                     break;
                 case HUNDERD:
-                    ChangingNumber(&tram,key);
-                    LCD_write_number(row_offset + 2,7,tram,1);
+                    ChangingNumber(&tram[row_offset],key);
+                    LCD_write_number(row_offset + 2,7,tram[row_offset],1);
                     if(KEY_ENTER == key)
                     {
-                        //LCD_write_string(row_offset + 2, 7, buff,0);
-                        LCD_write_number(row_offset + 2,7,tram,0);
-                        LCD_write_number(row_offset + 2,8,chuc,1);
+                        LCD_write_number(row_offset + 2,7,tram[row_offset],0);
+                        LCD_write_number(row_offset + 2,8,chuc[row_offset],1);
                     }
                     break;
                 case TENTH:
-                    ChangingNumber(&chuc,key);
-                    LCD_write_number(row_offset + 2,8,chuc,1);
+                    ChangingNumber(&chuc[row_offset],key);
+                    LCD_write_number(row_offset + 2,8,chuc[row_offset],1);
                     if(KEY_ENTER == key)
                     {
                         //LCD_write_string(row_offset + 2, 8, buff,0);
-                        LCD_write_number(row_offset + 2,8,chuc,0);
-                        LCD_write_number(row_offset + 2,9,dv,1);                        
+                        LCD_write_number(row_offset + 2,8,chuc[row_offset],0);
+                        LCD_write_number(row_offset + 2,9,dv[row_offset],1);                        
                     }                    
                     break;
                 case UNITS:
-                    ChangingNumber(&dv,key);
-                    LCD_write_number(row_offset + 2,9,dv,1);
+                    ChangingNumber(&dv[row_offset],key);
+                    LCD_write_number(row_offset + 2,9,dv[row_offset],1);
                     if(KEY_ENTER == key)
                     {
-                        LCD_write_number(row_offset + 2,9,dv,0);
+                        LCD_write_number(row_offset + 2,9,dv[row_offset],0);
                         time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
                         LCD_write_string(row_offset + 2, 11, buff,1);                                                 
                     }                                        
@@ -421,13 +393,13 @@ static void vKeyboardTask(void *pvParameters)
                     num_offset = 0;
                     if(row_offset == 0)
                     {
-                         stTimeSet.uiTON = nghin*1000+ tram*100 + chuc*10 + dv;
-                         LCD_write_number(3,6,nghin,1);
+                         stTimeSet.uiTON = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
+                         LCD_write_number(3,6,nghin[row_offset],1);
                          //KeyEnter = 0;
                     }
                     else if(row_offset == 1)
                     {
-                         stTimeSet.uiTOFF = nghin*1000+ tram*100 + chuc*10 + dv;
+                         stTimeSet.uiTOFF = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
                          KeyEnter = 3;
                          
                     }
@@ -438,7 +410,6 @@ static void vKeyboardTask(void *pvParameters)
         }
         if(KeyEnter == 3)
         {
-            static u8 SettingAccept = FALSE;
             LCD_write_string(4, 6, "OK",1);
             LCD_write_string(4, 8, "   ",0);
             switch(key)
@@ -459,7 +430,9 @@ static void vKeyboardTask(void *pvParameters)
                     {
                         LCD_write_string(4, 6, "OK  ",0);
                         KeyEnter = 0;
+                        SettingAccept = FALSE;
                         // Send message queue Time setting to RELAY task
+                        xQueueSend(qTLTimeOnOff,&stTimeSet,10);
                     }
                     //Send offset
                     //
@@ -474,11 +447,20 @@ static void vKeyboardTask(void *pvParameters)
 /*RELAY task*/
 static void vRelayTask(void *pvParameters)
 {
-    static TimerSetting_t stTimeset;
+    TimerSetting_t stTimeset;
     int rl_scan_idx;
     while(TRUE)
     {
-        xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 );
+        if(pdTRUE == xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ))
+        {
+            LCD_write_number(5,0,stTimeset.uiTON,0);
+            LCD_write_number(5,8,stTimeset.uiTOFF,0);
+            // Save to Flash
+        }
+        else
+        {
+            //Read from FLASH
+        }
         for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
         {
             GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_SET);
