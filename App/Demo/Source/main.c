@@ -113,7 +113,7 @@
 
 /* Demo app includes. */
 #include "serial.h"
-#include "sim908.h"
+#include "flasheeprom.h"
 #include "lcd_nokia5110/nokia_5110.h"
 /* Task priorities. */
 #define mainRELAY_TASK_PRIORITY     (tskIDLE_PRIORITY + 3)
@@ -133,6 +133,8 @@
 
 #define RL_NUMBER_MAX   12
 
+#define LOCK_FLASH(x)   xSemaphoreTake( x, ( TickType_t ) portMAX_DELAY )
+#define UNLOCK_FLASH(x) xSemaphoreGive( x );
 typedef struct RELAY_Output
 {
     GPIO_TypeDef*    port;
@@ -244,7 +246,7 @@ void error_lcd_printf(void);
 /*handler for using USART*/
 
 QueueHandle_t qTLTimeOnOff;
-SemaphoreHandle_t SIM908_Mutex;
+SemaphoreHandle_t FLASH_Mutex;
 /*-----------------------------------------------------------*/
 
 int main(void)
@@ -270,8 +272,8 @@ int main(void)
         LCD_write_string(0, 3, "QUEUE MEM fAIL",0);
         while (TRUE);
     }
-    SIM908_Mutex = xSemaphoreCreateMutex();
-    if( SIM908_Mutex == NULL )
+    FLASH_Mutex = xSemaphoreCreateMutex();
+    if( FLASH_Mutex == NULL )
     {
         LCD_write_string(0, 3, "MUTEX MEM fAIL",0);
         while(1);
@@ -304,6 +306,11 @@ static void vKeyboardTask(void *pvParameters)
     char buff[5] = {0};
 
     //Read setting from FLASH
+    //Read from FLASH
+    LOCK_FLASH(FLASH_Mutex);
+    FlashReadEEprom(&stTimeSet,sizeof(TimerSetting_t));
+    UNLOCK_FLASH(FLASH_Mutex);
+
     while(TRUE)
     {
         /* Read key pressed */
@@ -449,6 +456,11 @@ static void vRelayTask(void *pvParameters)
 {
     TimerSetting_t stTimeset;
     int rl_scan_idx;
+
+    //Read from FLASH
+    LOCK_FLASH(FLASH_Mutex);
+    FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
+    UNLOCK_FLASH(FLASH_Mutex);
     while(TRUE)
     {
         if(pdTRUE == xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ))
@@ -456,10 +468,16 @@ static void vRelayTask(void *pvParameters)
             LCD_write_number(5,0,stTimeset.uiTON,0);
             LCD_write_number(5,8,stTimeset.uiTOFF,0);
             // Save to Flash
+            LOCK_FLASH(FLASH_Mutex);
+            FlashWriteEEprom(stTimeset,sizeof(TimerSetting_t));
+            UNLOCK_FLASH(FLASH_Mutex);
         }
         else
         {
             //Read from FLASH
+            LOCK_FLASH(FLASH_Mutex);
+            FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
+            UNLOCK_FLASH(FLASH_Mutex);
         }
         for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
         {
