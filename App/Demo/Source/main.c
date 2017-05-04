@@ -1,70 +1,70 @@
 /*
-    FreeRTOS V8.2.3 - Copyright (C) 2015 Real Time Engineers Ltd.
-    All rights reserved
+	FreeRTOS V8.2.3 - Copyright (C) 2015 Real Time Engineers Ltd.
+	All rights reserved
 
-    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+	VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
 
-    This file is part of the FreeRTOS distribution.
+	This file is part of the FreeRTOS distribution.
 
-    FreeRTOS is free software; you can redistribute it and/or modify it under
-    the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
+	FreeRTOS is free software; you can redistribute it and/or modify it under
+	the terms of the GNU General Public License (version 2) as published by the
+	Free Software Foundation >>>> AND MODIFIED BY <<<< the FreeRTOS exception.
 
-    ***************************************************************************
-    >>!   NOTE: The modification to the GPL is included to allow you to     !<<
-    >>!   distribute a combined work that includes FreeRTOS without being   !<<
-    >>!   obliged to provide the source code for proprietary components     !<<
-    >>!   outside of the FreeRTOS kernel.                                   !<<
-    ***************************************************************************
+	***************************************************************************
+	>>!   NOTE: The modification to the GPL is included to allow you to     !<<
+	>>!   distribute a combined work that includes FreeRTOS without being   !<<
+	>>!   obliged to provide the source code for proprietary components     !<<
+	>>!   outside of the FreeRTOS kernel.                                   !<<
+	***************************************************************************
 
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available on the following
-    link: http://www.freertos.org/a00114.html
+	FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
+	WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+	FOR A PARTICULAR PURPOSE.  Full license text is available on the following
+	link: http://www.freertos.org/a00114.html
 
-    ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that is more than just the market leader, it     *
-     *    is the industry's de facto standard.                               *
-     *                                                                       *
-     *    Help yourself get started quickly while simultaneously helping     *
-     *    to support the FreeRTOS project by purchasing a FreeRTOS           *
-     *    tutorial book, reference manual, or both:                          *
-     *    http://www.FreeRTOS.org/Documentation                              *
-     *                                                                       *
-    ***************************************************************************
+	***************************************************************************
+	 *                                                                       *
+	 *    FreeRTOS provides completely free yet professionally developed,    *
+	 *    robust, strictly quality controlled, supported, and cross          *
+	 *    platform software that is more than just the market leader, it     *
+	 *    is the industry's de facto standard.                               *
+	 *                                                                       *
+	 *    Help yourself get started quickly while simultaneously helping     *
+	 *    to support the FreeRTOS project by purchasing a FreeRTOS           *
+	 *    tutorial book, reference manual, or both:                          *
+	 *    http://www.FreeRTOS.org/Documentation                              *
+	 *                                                                       *
+	***************************************************************************
 
-    http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
-    the FAQ page "My application does not run, what could be wrong?".  Have you
-    defined configASSERT()?
+	http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
+	the FAQ page "My application does not run, what could be wrong?".  Have you
+	defined configASSERT()?
 
-    http://www.FreeRTOS.org/support - In return for receiving this top quality
-    embedded software for free we request you assist our global community by
-    participating in the support forum.
+	http://www.FreeRTOS.org/support - In return for receiving this top quality
+	embedded software for free we request you assist our global community by
+	participating in the support forum.
 
-    http://www.FreeRTOS.org/training - Investing in training allows your team to
-    be as productive as possible as early as possible.  Now you can receive
-    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
-    Ltd, and the world's leading authority on the world's leading RTOS.
+	http://www.FreeRTOS.org/training - Investing in training allows your team to
+	be as productive as possible as early as possible.  Now you can receive
+	FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
+	Ltd, and the world's leading authority on the world's leading RTOS.
 
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
-    compatible FAT file system, and our tiny thread aware UDP/IP stack.
+	http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
+	including FreeRTOS+Trace - an indispensable productivity tool, a DOS
+	compatible FAT file system, and our tiny thread aware UDP/IP stack.
 
-    http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
-    Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
+	http://www.FreeRTOS.org/labs - Where new FreeRTOS products go to incubate.
+	Come and try FreeRTOS+TCP, our new open source TCP/IP stack for FreeRTOS.
 
-    http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
-    Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and commercial middleware.
+	http://www.OpenRTOS.com - Real Time Engineers ltd. license FreeRTOS to High
+	Integrity Systems ltd. to sell under the OpenRTOS brand.  Low cost OpenRTOS
+	licenses offer ticketed support, indemnification and commercial middleware.
 
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
-    engineered and independently SIL3 certified version for use in safety and
-    mission critical applications that require provable dependability.
+	http://www.SafeRTOS.com - High Integrity Systems also provide a safety
+	engineered and independently SIL3 certified version for use in safety and
+	mission critical applications that require provable dependability.
 
-    1 tab == 4 spaces!
+	1 tab == 4 spaces!
 */
 
 /*
@@ -137,69 +137,69 @@
 #define UNLOCK_FLASH(x) xSemaphoreGive( x );
 typedef struct RELAY_Output
 {
-    GPIO_TypeDef*    port;
-    u16             pin;
+	GPIO_TypeDef*    port;
+	u16             pin;
 }RELAY_Output_t;
 
 typedef struct KEYBOARD_Input
 {
-    GPIO_TypeDef *   port;
-    u16             pin;
+	GPIO_TypeDef *   port;
+	u16             pin;
 }KEYBOARD_Input_t;
 
 typedef struct TimerSetting
 {
-    unsigned int uiTON;
-    unsigned int uiTOFF;
+	unsigned int uiTON;
+	unsigned int uiTOFF;
 }TimerSetting_t;
 
 RELAY_Output_t RELAY_OUTPUT_MAPPING[] = 
 {
-    {GPIOB, GPIO_Pin_0},
-    {GPIOB, GPIO_Pin_1},
-    {GPIOB, GPIO_Pin_2},
-    {GPIOB, GPIO_Pin_3},
-    {GPIOB, GPIO_Pin_4},
-    {GPIOB, GPIO_Pin_5},
-    {GPIOB, GPIO_Pin_6},
-    {GPIOB, GPIO_Pin_7},
-    {GPIOB, GPIO_Pin_8},
-    {GPIOB, GPIO_Pin_9},
-    {GPIOB, GPIO_Pin_10},
-    {GPIOB, GPIO_Pin_11},
-    {GPIOB, GPIO_Pin_12},
+	{GPIOB, GPIO_Pin_0},
+	{GPIOB, GPIO_Pin_1},
+	{GPIOB, GPIO_Pin_2},
+	{GPIOB, GPIO_Pin_3},
+	{GPIOB, GPIO_Pin_4},
+	{GPIOB, GPIO_Pin_5},
+	{GPIOB, GPIO_Pin_6},
+	{GPIOB, GPIO_Pin_7},
+	{GPIOB, GPIO_Pin_8},
+	{GPIOB, GPIO_Pin_9},
+	{GPIOB, GPIO_Pin_10},
+	{GPIOB, GPIO_Pin_11},
+	{GPIOB, GPIO_Pin_12},
 };
 
 KEYBOARD_Input_t KEY_GPIO_MAPPING[] = 
 {
-    {GPIOC, GPIO_Pin_0},
-    {GPIOC, GPIO_Pin_2},
-    {GPIOC, GPIO_Pin_4}    
+	{GPIOC, GPIO_Pin_0},
+	{GPIOC, GPIO_Pin_2},
+	{GPIOC, GPIO_Pin_4}    
 };
 
 enum
 {
-    KEY_UP = 0,
-    KEY_DOWN,
-    KEY_ENTER,
-    KEY_MAX
+	KEY_UP = 0,
+	KEY_DOWN,
+	KEY_ENTER,
+	KEY_MAX
 };
 
 enum
 {
-    TON_SET = 0,
-    TOFF_SET,
-    OK_SET,
-    MAX_SET
+	TON_SET = 0,
+	TOFF_SET,
+	OK_SET,
+	MAX_SET
 };
 enum
 {
-    THOUS,
-    HUNDERD,
-    TENTH,
-    UNITS,
-    UNIT,
-    MAX_NUM
+	THOUS,
+	HUNDERD,
+	TENTH,
+	UNITS,
+	UNIT,
+	MAX_NUM
 };
 
 /*-----------------------------------------------------------*/
@@ -252,418 +252,428 @@ SemaphoreHandle_t FLASH_Mutex;
 int main(void)
 {
 #ifdef DEBUG
-    debug();
+	debug();
 #endif
 
-    prvSetupHardware();
+	prvSetupHardware();
 
-    LCD_init();
-    LCD_clear();
+	LCD_init();
+	LCD_clear();
 
-    LCD_write_string(0, 0, "SETTING TIME",1);
-    LCD_write_string(2, 0, "TON  :1234 ms",0);
-    LCD_write_string(3, 0, "TOFF :5678 ms",0);
-    LCD_write_string(4, 6, "OK",0);
+	LCD_write_string(0, 0, "SETTING TIME",1);
+	LCD_write_string(2, 0, "TON  :1234 ms",0);
+	LCD_write_string(3, 0, "TOFF :5678 ms",0);
+	LCD_write_string(4, 6, "OK",0);
 
  
-    qTLTimeOnOff = xQueueCreate(20, sizeof(TimerSetting_t));
-    if (qTLTimeOnOff == NULL)
-    {
-        LCD_write_string(0, 3, "QUEUE MEM fAIL",0);
-        while (TRUE);
-    }
-    FLASH_Mutex = xSemaphoreCreateMutex();
-    if( FLASH_Mutex == NULL )
-    {
-        LCD_write_string(0, 3, "MUTEX MEM fAIL",0);
-        while(1);
-    }
+	qTLTimeOnOff = xQueueCreate(20, sizeof(TimerSetting_t));
+	if (qTLTimeOnOff == NULL)
+	{
+		LCD_write_string(0, 3, "QUEUE MEM fAIL",0);
+		while (TRUE);
+	}
+	FLASH_Mutex = xSemaphoreCreateMutex();
+	if( FLASH_Mutex == NULL )
+	{
+		LCD_write_string(0, 3, "MUTEX MEM fAIL",0);
+		while(1);
+	}
 
-    /* Start the tasks defined within this file/specific to this demo. */
-    // xTaskCreate( vGPSTask, "GPS", mainGPS_TASK_STACK_SIZE, NULL, mainGPS_TASK_PRIORITY, NULL );
-    xTaskCreate(vKeyboardTask, "KEYBOARD", mainKEYBOARD_TASK_STACK_SIZE, NULL, mainKEYBOARD_TASK_PRIORITY, NULL);
-    xTaskCreate(vRelayTask, "RELAY", mainRELAY_TASK_STACK_SIZE, NULL, mainRELAY_TASK_PRIORITY, NULL);
+	/* Start the tasks defined within this file/specific to this demo. */
+	// xTaskCreate( vGPSTask, "GPS", mainGPS_TASK_STACK_SIZE, NULL, mainGPS_TASK_PRIORITY, NULL );
+	xTaskCreate(vKeyboardTask, "KEYBOARD", mainKEYBOARD_TASK_STACK_SIZE, NULL, mainKEYBOARD_TASK_PRIORITY, NULL);
+	xTaskCreate(vRelayTask, "RELAY", mainRELAY_TASK_STACK_SIZE, NULL, mainRELAY_TASK_PRIORITY, NULL);
 
-    /* Start the scheduler. */
-    vTaskStartScheduler();
+	/* Start the scheduler. */
+	vTaskStartScheduler();
 
-    /* Will only get here if there was not enough heap space to create the
-    idle task. */
-    return 0;
+	/* Will only get here if there was not enough heap space to create the
+	idle task. */
+	return 0;
 }
 /*-----------------------------------------------------------*/
 /*Keyboard task*/
 static void vKeyboardTask(void *pvParameters)
 {
-    static u8 row_offset = 0;
-    static u8 num_offset = 0;
-    static u8 KeyEnter = 0;
-    static u8 nghin[2],tram[2],chuc[2],dv[2],unit[2];
-    static u8 time_unit = 0;
-    u8 key;
-    u8 SettingAccept = FALSE;
-    TimerSetting_t stTimeSet;
-    char buff[5] = {0};
+	static u8 row_offset = 0;
+	static u8 num_offset = 0;
+	static u8 KeyEnter = 0;
+	static u8 nghin[2],tram[2],chuc[2],dv[2],unit[2];
+	static u8 time_unit = 0;
+	u8 key;
+	u8 SettingAccept = FALSE;
+	TimerSetting_t stTimeSet = {1234,1000};
+	char buff[5] = {0};
+		
+	//Read setting from FLASH
+	//Read from FLASH
+	LOCK_FLASH(FLASH_Mutex);
+	FlashReadEEprom(&stTimeSet,sizeof(TimerSetting_t));
+	UNLOCK_FLASH(FLASH_Mutex);
 
-    //Read setting from FLASH
-    //Read from FLASH
-    LOCK_FLASH(FLASH_Mutex);
-    FlashReadEEprom(&stTimeSet,sizeof(TimerSetting_t));
-    UNLOCK_FLASH(FLASH_Mutex);
+	nghin[0] = stTimeset.uiTON/1000;
+	tram[0] = (stTimeset.uiTON/100)%10;
+	chuc[0] = (stTimeset.uiTON%100)/10;
+	dv[0] = (stTimeset.uiTON%100)%10;
 
-    while(TRUE)
-    {
-        /* Read key pressed */
-        do
-        {
-            key = FindKeyBoard(0);
-            vTaskDelay(100);  
-        }while(KEY_MAX == key);
+	nghin[1] = stTimeset.uiTOFF/1000;
+	tram[1] = (stTimeset.uiTOFF/100)%10;
+	chuc[1] = (stTimeset.uiTOFF%100)/10;
+	dv[1] = (stTimeset.uiTOFF%100)%10;	
 
-        if(KeyEnter == 0)
-        {
-            if(KEY_ENTER == key)
-            {
-                KeyEnter = 2;
-                key  = KEY_MAX;
-                LCD_write_number(row_offset + 2,6,nghin[row_offset],1);                
-            }       
-        }
+	while(TRUE)
+	{
+		/* Read key pressed */
+		do
+		{
+			key = FindKeyBoard(0);
+			vTaskDelay(100);  
+		}while(KEY_MAX == key);
 
-        else if(KeyEnter == 2)
-        {
-            //char buff[5] = {0};
-            if(row_offset > 1 ) {LCD_write_string(5,0,"ERROR",1);continue;}
-            switch(num_offset)
-            {
-                case THOUS:
-                    ChangingNumber(&nghin[row_offset],key);
-                    LCD_write_number(row_offset + 2,6,nghin[row_offset],1);
-                    if(KEY_ENTER == key)
-                    {
-                        LCD_write_number(row_offset + 2,6,nghin[row_offset],0);
-                        LCD_write_number(row_offset + 2,7,tram[row_offset],1);
-                    }                    
-                    break;
-                case HUNDERD:
-                    ChangingNumber(&tram[row_offset],key);
-                    LCD_write_number(row_offset + 2,7,tram[row_offset],1);
-                    if(KEY_ENTER == key)
-                    {
-                        LCD_write_number(row_offset + 2,7,tram[row_offset],0);
-                        LCD_write_number(row_offset + 2,8,chuc[row_offset],1);
-                    }
-                    break;
-                case TENTH:
-                    ChangingNumber(&chuc[row_offset],key);
-                    LCD_write_number(row_offset + 2,8,chuc[row_offset],1);
-                    if(KEY_ENTER == key)
-                    {
-                        //LCD_write_string(row_offset + 2, 8, buff,0);
-                        LCD_write_number(row_offset + 2,8,chuc[row_offset],0);
-                        LCD_write_number(row_offset + 2,9,dv[row_offset],1);                        
-                    }                    
-                    break;
-                case UNITS:
-                    ChangingNumber(&dv[row_offset],key);
-                    LCD_write_number(row_offset + 2,9,dv[row_offset],1);
-                    if(KEY_ENTER == key)
-                    {
-                        LCD_write_number(row_offset + 2,9,dv[row_offset],0);
-                        time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
-                        LCD_write_string(row_offset + 2, 11, buff,1);                                                 
-                    }                                        
-                    break;
-                case UNIT:
-                    time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
-                    LCD_write_string(row_offset + 2, 11, buff,1);                         
-                    if(KEY_UP == key)
-                    {
-                        time_unit = !time_unit;
-                        time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
-                        LCD_write_string(row_offset + 2, 11, buff,1); 
+		if(KeyEnter == 0)
+		{
+			if(KEY_ENTER == key)
+			{
+				KeyEnter = 2;
+				key  = KEY_MAX;
+				LCD_write_number(row_offset + 2,6,nghin[row_offset],1);                
+			}       
+		}
 
-                    }
-                    if(KEY_ENTER == key)
-                    {
-                        time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
-                        LCD_write_string(row_offset + 2, 11, buff,0); 
+		else if(KeyEnter == 2)
+		{
+			//char buff[5] = {0};
+			if(row_offset > 1 ) {LCD_write_string(5,0,"ERROR",1);continue;}
+			switch(num_offset)
+			{
+				case THOUS:
+					ChangingNumber(&nghin[row_offset],key);
+					LCD_write_number(row_offset + 2,6,nghin[row_offset],1);
+					if(KEY_ENTER == key)
+					{
+						LCD_write_number(row_offset + 2,6,nghin[row_offset],0);
+						LCD_write_number(row_offset + 2,7,tram[row_offset],1);
+					}                    
+					break;
+				case HUNDERD:
+					ChangingNumber(&tram[row_offset],key);
+					LCD_write_number(row_offset + 2,7,tram[row_offset],1);
+					if(KEY_ENTER == key)
+					{
+						LCD_write_number(row_offset + 2,7,tram[row_offset],0);
+						LCD_write_number(row_offset + 2,8,chuc[row_offset],1);
+					}
+					break;
+				case TENTH:
+					ChangingNumber(&chuc[row_offset],key);
+					LCD_write_number(row_offset + 2,8,chuc[row_offset],1);
+					if(KEY_ENTER == key)
+					{
+						//LCD_write_string(row_offset + 2, 8, buff,0);
+						LCD_write_number(row_offset + 2,8,chuc[row_offset],0);
+						LCD_write_number(row_offset + 2,9,dv[row_offset],1);                        
+					}                    
+					break;
+				case UNITS:
+					ChangingNumber(&dv[row_offset],key);
+					LCD_write_number(row_offset + 2,9,dv[row_offset],1);
+					if(KEY_ENTER == key)
+					{
+						LCD_write_number(row_offset + 2,9,dv[row_offset],0);
+						time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
+						LCD_write_string(row_offset + 2, 11, buff,1);                                                 
+					}                                        
+					break;
+				case UNIT:
+					time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
+					LCD_write_string(row_offset + 2, 11, buff,1);                         
+					if(KEY_UP == key)
+					{
+						time_unit = !time_unit;
+						time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
+						LCD_write_string(row_offset + 2, 11, buff,1); 
 
-                    }                    
-                    break;                                                                
-            }
-            if(key == KEY_ENTER) 
-            {                
-                if(num_offset++ == MAX_NUM -1)
-                {
-                    //KeyEnter = 1;
-                    num_offset = 0;
-                    if(row_offset == 0)
-                    {
-                         stTimeSet.uiTON = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
-                         LCD_write_number(3,6,nghin[row_offset],1);
-                         //KeyEnter = 0;
-                    }
-                    else if(row_offset == 1)
-                    {
-                         stTimeSet.uiTOFF = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
-                         KeyEnter = 3;
-                         
-                    }
-                    row_offset++;                    
-                 }               
-               
-            }
-        }
-        if(KeyEnter == 3)
-        {
-            LCD_write_string(4, 6, "OK",1);
-            LCD_write_string(4, 8, "   ",0);
-            switch(key)
-            {
-                case KEY_UP :
-                        //LCD print OK
-                    LCD_write_string(4, 6, "OK",1);
-                    LCD_write_string(4, 8, "   ",0);                   
-                    SettingAccept = TRUE;
-                    break;
-                case KEY_DOWN:
-                    ////LCD print CACEL
-                    LCD_write_string(4, 6, "CACEL",1);
-                    SettingAccept = FALSE;
-                    break;
-                case KEY_ENTER:
-                    if(SettingAccept)
-                    {
-                        LCD_write_string(4, 6, "OK  ",0);
-                        KeyEnter = 0;
-                        SettingAccept = FALSE;
-                        // Send message queue Time setting to RELAY task
-                        xQueueSend(qTLTimeOnOff,&stTimeSet,10);
-                    }
-                    //Send offset
-                    //
-                    break;
-            }
-            row_offset  = 0;
-        } 
-        //vTaskDelay(100);   
-    }
+					}
+					if(KEY_ENTER == key)
+					{
+						time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
+						LCD_write_string(row_offset + 2, 11, buff,0); 
+
+					}                    
+					break;                                                                
+			}
+			if(key == KEY_ENTER) 
+			{                
+				if(num_offset++ == MAX_NUM -1)
+				{
+					//KeyEnter = 1;
+					num_offset = 0;
+					if(row_offset == 0)
+					{
+						 stTimeSet.uiTON = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
+						 LCD_write_number(3,6,nghin[row_offset],1);
+						 //KeyEnter = 0;
+					}
+					else if(row_offset == 1)
+					{
+						 stTimeSet.uiTOFF = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
+						 KeyEnter = 3;
+						 
+					}
+					row_offset++;                    
+				 }               
+			   
+			}
+		}
+		if(KeyEnter == 3)
+		{
+			LCD_write_string(4, 6, "OK",1);
+			LCD_write_string(4, 8, "   ",0);
+			switch(key)
+			{
+				case KEY_UP :
+						//LCD print OK
+					LCD_write_string(4, 6, "OK",1);
+					LCD_write_string(4, 8, "   ",0);                   
+					SettingAccept = TRUE;
+					break;
+				case KEY_DOWN:
+					////LCD print CACEL
+					LCD_write_string(4, 6, "CACEL",1);
+					SettingAccept = FALSE;
+					break;
+				case KEY_ENTER:
+					if(SettingAccept)
+					{
+						LCD_write_string(4, 6, "OK  ",0);
+						KeyEnter = 0;
+						SettingAccept = FALSE;
+						// Send message queue Time setting to RELAY task
+						xQueueSend(qTLTimeOnOff,&stTimeSet,10);
+					}
+					//Send offset
+					//
+					break;
+			}
+			row_offset  = 0;
+		} 
+		//vTaskDelay(100);   
+	}
 }
 
 /*RELAY task*/
 static void vRelayTask(void *pvParameters)
 {
-    TimerSetting_t stTimeset;
-    int rl_scan_idx;
+	TimerSetting_t stTimeset;
+	int rl_scan_idx;
 
-    //Read from FLASH
-    LOCK_FLASH(FLASH_Mutex);
-    FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
-    UNLOCK_FLASH(FLASH_Mutex);
-    while(TRUE)
-    {
-        if(pdTRUE == xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ))
-        {
-            LCD_write_number(5,0,stTimeset.uiTON,0);
-            LCD_write_number(5,8,stTimeset.uiTOFF,0);
-            // Save to Flash
-            LOCK_FLASH(FLASH_Mutex);
-            FlashWriteEEprom(stTimeset,sizeof(TimerSetting_t));
-            UNLOCK_FLASH(FLASH_Mutex);
-        }
-        else
-        {
-            //Read from FLASH
-            LOCK_FLASH(FLASH_Mutex);
-            FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
-            UNLOCK_FLASH(FLASH_Mutex);
-        }
-        for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
-        {
-            GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_SET);
-            vTaskDelay(stTimeset.uiTON);
-            GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_RESET);
-            vTaskDelay(stTimeset.uiTOFF);             
-        }        
-    }
+	//Read from FLASH
+	LOCK_FLASH(FLASH_Mutex);
+	FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
+	UNLOCK_FLASH(FLASH_Mutex);
+	while(TRUE)
+	{
+		if(pdTRUE == xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ))
+		{
+			LCD_write_number(5,0,stTimeset.uiTON,0);
+			LCD_write_number(5,8,stTimeset.uiTOFF,0);
+			// Save to Flash
+			LOCK_FLASH(FLASH_Mutex);
+			FlashWriteEEprom(stTimeset,sizeof(TimerSetting_t));
+			UNLOCK_FLASH(FLASH_Mutex);
+		}
+		else
+		{
+			//Read from FLASH
+			LOCK_FLASH(FLASH_Mutex);
+			FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
+			UNLOCK_FLASH(FLASH_Mutex);
+		}
+		for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
+		{
+			GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_SET);
+			vTaskDelay(stTimeset.uiTON);
+			GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_RESET);
+			vTaskDelay(stTimeset.uiTOFF);             
+		}        
+	}
 }
 /*LCD task*/
 static void vLCDTask(void *pvParameters)
 {
-    // int LCD here
-    while(TRUE)
-    {
-        //if( xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ) )
-        {
+	// int LCD here
+	while(TRUE)
+	{
+		//if( xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ) )
+		{
 
-        }
-    }
+		}
+	}
 }
 /*-----------------------------------------------------------*/
 
 u16 FindKeyBoard(u8 keepingKEY)
 {
-    u8 idx_key;
+	u8 idx_key;
 
-    for(idx_key = 0 ; idx_key < KEY_MAX;idx_key++)
-    {
-        if(Bit_RESET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin))
-        {
-            //if(!keepingKEY)
-            {
-                while(Bit_RESET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin));    
-            }            
-            return idx_key;
-        }
-    }
-    return KEY_MAX;
+	for(idx_key = 0 ; idx_key < KEY_MAX;idx_key++)
+	{
+		if(Bit_RESET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin))
+		{
+			//if(!keepingKEY)
+			{
+				while(Bit_RESET == GPIO_ReadInputDataBit(KEY_GPIO_MAPPING[idx_key].port,KEY_GPIO_MAPPING[idx_key].pin));    
+			}            
+			return idx_key;
+		}
+	}
+	return KEY_MAX;
 }
 
 
 void ChangingNumber(u8 *number,u8 key)
 {
-    u8 tmp_num = *number;
-    if(KEY_UP == key)
-    {
-        if(tmp_num++ == 9)
-        {
-            tmp_num = 0;
-        }
-    }
-    else if(KEY_DOWN == key)
-    {
-        if( tmp_num-- == 0)
-        {
-            tmp_num = 9;
-        }
-    }
-    else if(KEY_ENTER == key)
-    {
+	u8 tmp_num = *number;
+	if(KEY_UP == key)
+	{
+		if(tmp_num++ == 9)
+		{
+			tmp_num = 0;
+		}
+	}
+	else if(KEY_DOWN == key)
+	{
+		if( tmp_num-- == 0)
+		{
+			tmp_num = 9;
+		}
+	}
+	else if(KEY_ENTER == key)
+	{
 
-    }
-    *number = tmp_num;
+	}
+	*number = tmp_num;
 }
 
 char *Menu[] = 
 {
-    "TON",
-    "TOFF",
-    "OK"
+	"TON",
+	"TOFF",
+	"OK"
 };
 void DisplayCursorStr(int row)
 {
-    int i;
-    for (i = 0; i < 3; i++)
-    {
-        if(i == row) 
-        {
-            LCD_write_string(i+2,0,Menu[i],1);
-        }else
-        {
-            LCD_write_string(i+2,0,Menu[i],0);    
-        }
-        
-    }
+	int i;
+	for (i = 0; i < 3; i++)
+	{
+		if(i == row) 
+		{
+			LCD_write_string(i+2,0,Menu[i],1);
+		}else
+		{
+			LCD_write_string(i+2,0,Menu[i],0);    
+		}
+		
+	}
 }
 static void prvSetupHardware(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitTypeDef GPIO_InitStructure;
 
-    /* Enable HSE (high speed external clock). */
-    RCC_HSEConfig(RCC_HSE_ON);
+	/* Enable HSE (high speed external clock). */
+	RCC_HSEConfig(RCC_HSE_ON);
 
-    /* Wait till HSE is ready. */
-    while (RCC_GetFlagStatus(RCC_FLAG_HSERDY) == RESET)
-    {
-    }
+	/* Wait till HSE is ready. */
+	while (RCC_GetFlagStatus(RCC_FLAG_HSERDY) == RESET)
+	{
+	}
 
-    /* 2 wait states required on the flash. */
-    *((unsigned long *)0x40022000) = 0x02;
+	/* 2 wait states required on the flash. */
+	*((unsigned long *)0x40022000) = 0x02;
 
-    /* HCLK = SYSCLK */
-    RCC_HCLKConfig(RCC_SYSCLK_Div1);
+	/* HCLK = SYSCLK */
+	RCC_HCLKConfig(RCC_SYSCLK_Div1);
 
-    /* PCLK2 = HCLK */
-    RCC_PCLK2Config(RCC_HCLK_Div1);
+	/* PCLK2 = HCLK */
+	RCC_PCLK2Config(RCC_HCLK_Div1);
 
-    /* PCLK1 = HCLK/2 */
-    RCC_PCLK1Config(RCC_HCLK_Div2);
+	/* PCLK1 = HCLK/2 */
+	RCC_PCLK1Config(RCC_HCLK_Div2);
 
-    /* PLLCLK = 12MHz * 6 = 72 MHz. */
-    RCC_PLLConfig(RCC_PLLSource_HSE_Div1, RCC_PLLMul_6);
+	/* PLLCLK = 12MHz * 6 = 72 MHz. */
+	RCC_PLLConfig(RCC_PLLSource_HSE_Div1, RCC_PLLMul_6);
 
-    /* Enable PLL. */
-    RCC_PLLCmd(ENABLE);
+	/* Enable PLL. */
+	RCC_PLLCmd(ENABLE);
 
-    /* Wait till PLL is ready. */
-    while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
-    {
-    }
+	/* Wait till PLL is ready. */
+	while (RCC_GetFlagStatus(RCC_FLAG_PLLRDY) == RESET)
+	{
+	}
 
-    /* Select PLL as system clock source. */
-    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
+	/* Select PLL as system clock source. */
+	RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
 
-    /* Wait till PLL is used as system clock source. */
-    while (RCC_GetSYSCLKSource() != 0x08)
-    {
-    }
+	/* Wait till PLL is used as system clock source. */
+	while (RCC_GetSYSCLKSource() != 0x08)
+	{
+	}
 
-    /* Enable GPIOA, GPIOB, GPIOC, GPIOD, GPIOE and AFIO clocks */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO,
-                           ENABLE);
+	/* Enable GPIOA, GPIOB, GPIOC, GPIOD, GPIOE and AFIO clocks */
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOC | RCC_APB2Periph_AFIO,
+						   ENABLE);
 
-    /* SPI2 Periph clock enable */
-    // RCC_APB1PeriphClockCmd( RCC_APB1Periph_SPI2, ENABLE );
+	/* SPI2 Periph clock enable */
+	// RCC_APB1PeriphClockCmd( RCC_APB1Periph_SPI2, ENABLE );
 
-    /* Set the Vector Table base address at 0x08000000 */
-    NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
+	/* Set the Vector Table base address at 0x08000000 */
+	NVIC_SetVectorTable(NVIC_VectTab_FLASH, 0x0);
 
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
-    /* Configure HCLK clock as SysTick clock source. */
-    SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
+	/* Configure HCLK clock as SysTick clock source. */
+	SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK);
 
   //  xSerialPortInitMinimal(USART2, &uart2_handle, 115200, MAX_LENGH_STR);
 
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_5 | GPIO_Pin_7;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_11 | GPIO_Pin_5 | GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-    /*Initial for led and BL*/
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOC, &GPIO_InitStructure);
+	/*Initial for led and BL*/
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-    /*Initial for PWKEY*/
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
-    // vParTestInitialise();
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_2 | GPIO_Pin_4;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_Init(GPIOC, &GPIO_InitStructure);    
+	/*Initial for PWKEY*/
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	// vParTestInitialise();
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_2 | GPIO_Pin_4;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_Init(GPIOC, &GPIO_InitStructure);    
 }
 
 /*-----------------------------------------------------------*/
 
 void error_lcd_printf()
 {
-    LCD_write_string(0, 3, "FAIL...",0);
-    while (TRUE)
-        ;
+	LCD_write_string(0, 3, "FAIL...",0);
+	while (TRUE)
+		;
 }
 int fputc(int ch, FILE *f)
 {
-    /* Place your implementation of fputc here */
-    /* e.g. write a character to the USART */
+	/* Place your implementation of fputc here */
+	/* e.g. write a character to the USART */
    // xSerialPutChar(&uart2_handle, ch, 0);
 
-    return ch;
+	return ch;
 }
 /*-----------------------------------------------------------*/
 
@@ -671,8 +681,8 @@ int fputc(int ch, FILE *f)
 /* Keep the linker happy. */
 void assert_failed(unsigned char *pcFile, unsigned long ulLine)
 {
-    for (;;)
-    {
-    }
+	for (;;)
+	{
+	}
 }
 #endif
