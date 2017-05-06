@@ -151,6 +151,7 @@ typedef struct TimerSetting
 {
 	unsigned int uiTON;
 	unsigned int uiTOFF;
+	unsigned int uiUNIT[2];
 }TimerSetting_t;
 
 RELAY_Output_t RELAY_OUTPUT_MAPPING[] = 
@@ -293,10 +294,10 @@ static void vKeyboardTask(void *pvParameters)
 	static u8 row_offset = 0;
 	static u8 num_offset = 0;
 	static u8 KeyEnter = 0;
-	static u8 nghin[2],tram[2],chuc[2],dv[2],unit[2];
-	static u8 time_unit = 0;
+	static u8 nghin[2],tram[2],chuc[2],dv[2];
+	//static u8 time_unit[2] = 0;
 	u8 key;
-	u8 SettingAccept = FALSE;
+	u8 SettingAccept = TRUE;
 	TimerSetting_t stTimeSet = {1000,1000};
 	char buff[5] = {0};
 	char buff_lcd[16] = {0};
@@ -316,13 +317,39 @@ static void vKeyboardTask(void *pvParameters)
 	{
 		stTimeSet.uiTOFF = 1000;
 	}
-	sprintf(buff_lcd,"TON  :%04d ms",stTimeSet.uiTON);
-	LCD_write_string(2, 0, buff_lcd,0);
-	sprintf(buff_lcd,"TOFF :%04d ms",stTimeSet.uiTOFF);
-	LCD_write_string(3, 0, buff_lcd,0);
+	if(stTimeSet.uiUNIT[0] == 0xFFFFFFFF)
+	{
+		stTimeSet.uiUNIT[0]  = 0;
+	}
+	if(stTimeSet.uiUNIT[1] == 0xFFFFFFFF)
+	{
+		stTimeSet.uiUNIT[1] = 0;
+	}	
+	if(stTimeSet.uiUNIT[0] == 1)//second
+	{
+		stTimeSet.uiTON = stTimeSet.uiTON/1000;
+		sprintf(buff_lcd,"TON  :%04d s ",stTimeSet.uiTON);
+		LCD_write_string(2, 0, buff_lcd,0);
+	}
+	else
+	{
+		sprintf(buff_lcd,"TON  :%04d ms",stTimeSet.uiTON);
+		LCD_write_string(2, 0, buff_lcd,0);		
+	}
+	if(stTimeSet.uiUNIT[1] == 1)
+	{
+		stTimeSet.uiTOFF = stTimeSet.uiTOFF/1000;
+		sprintf(buff_lcd,"TOFF :%04d s ",stTimeSet.uiTOFF);
+		LCD_write_string(3, 0, buff_lcd,0);
+	}
+	else
+	{
+		sprintf(buff_lcd,"TOFF :%04d ms",stTimeSet.uiTOFF);
+		LCD_write_string(3, 0, buff_lcd,0);		
+	}
+
 	LCD_write_string(4, 6, "OK",0);
 
-	xQueueSend(qTLTimeOnOff,&stTimeSet,10);
 
 	nghin[0] = stTimeSet.uiTON/1000;
 	tram[0] = (stTimeSet.uiTON/100)%10;
@@ -334,6 +361,11 @@ static void vKeyboardTask(void *pvParameters)
 	chuc[1] = (stTimeSet.uiTOFF%100)/10;
 	dv[1] = (stTimeSet.uiTOFF%100)%10;	
 
+	//Convert second to msecond
+	if(stTimeSet.uiUNIT[0]) stTimeSet.uiTON = stTimeSet.uiTON*1000;
+	if(stTimeSet.uiUNIT[1]) stTimeSet.uiTOFF = stTimeSet.uiTOFF*1000;
+        
+        xQueueSend(qTLTimeOnOff,&stTimeSet,10);
 	while(TRUE)
 	{
 		/* Read key pressed */
@@ -393,23 +425,23 @@ static void vKeyboardTask(void *pvParameters)
 					if(KEY_ENTER == key)
 					{
 						LCD_write_number(row_offset + 2,9,dv[row_offset],0);
-						time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
+						stTimeSet.uiUNIT[row_offset] ? sprintf(buff,"s "):sprintf(buff,"ms");                        
 						LCD_write_string(row_offset + 2, 11, buff,1);                                                 
 					}                                        
 					break;
 				case UNIT:
-					time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");                        
+					stTimeSet.uiUNIT[row_offset] ? sprintf(buff,"s "):sprintf(buff,"ms");                        
 					LCD_write_string(row_offset + 2, 11, buff,1);                         
 					if(KEY_UP == key)
 					{
-						time_unit = !time_unit;
-						time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
+						stTimeSet.uiUNIT[row_offset] = !stTimeSet.uiUNIT[row_offset];
+						stTimeSet.uiUNIT[row_offset] ? sprintf(buff,"s "):sprintf(buff,"ms");            
 						LCD_write_string(row_offset + 2, 11, buff,1); 
 
 					}
 					if(KEY_ENTER == key)
 					{
-						time_unit ? sprintf(buff,"s "):sprintf(buff,"ms");            
+						stTimeSet.uiUNIT[row_offset] ? sprintf(buff,"s "):sprintf(buff,"ms");            
 						LCD_write_string(row_offset + 2, 11, buff,0); 
 
 					}                    
@@ -424,15 +456,16 @@ static void vKeyboardTask(void *pvParameters)
 					if(row_offset == 0)
 					{
 						 stTimeSet.uiTON = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
-						 if(time_unit) stTimeSet.uiTON = stTimeSet.uiTON*1000;
+						 if(stTimeSet.uiUNIT[row_offset]) stTimeSet.uiTON = stTimeSet.uiTON*1000;
 						 LCD_write_number(3,6,nghin[1],1);
 						 //KeyEnter = 0;
 					}
 					else if(row_offset == 1)
 					{
 						 stTimeSet.uiTOFF = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
-						 if(time_unit) stTimeSet.uiTOFF = stTimeSet.uiTOFF*1000;
+						 if(stTimeSet.uiUNIT[row_offset]) stTimeSet.uiTOFF = stTimeSet.uiTOFF*1000;
 						 KeyEnter = 3;
+						 key = KEY_MAX;
 						 
 					}
 					row_offset++;                    
@@ -463,13 +496,16 @@ static void vKeyboardTask(void *pvParameters)
 						LCD_write_string(4, 6, "OK  ",0);
 						KeyEnter = 0;
 						SettingAccept = FALSE;
+						LOCK_FLASH(FLASH_Mutex);
+						FlashWriteEEprom(&stTimeSet,sizeof(TimerSetting_t));
+						UNLOCK_FLASH(FLASH_Mutex);
 						// Send message queue Time setting to RELAY task
 						xQueueSend(qTLTimeOnOff,&stTimeSet,10);
 					}
 					else
 					{
-						//LCD_write_string(4, 6, "OK  ",0);
-						//KeyEnter = 0;
+						LCD_write_string(4, 6, "OK  ",0);
+						KeyEnter = 0;
 						//SettingAccept = FALSE;
 					}
 					//Send offset
@@ -487,23 +523,10 @@ static void vRelayTask(void *pvParameters)
 {
 	TimerSetting_t stTimeset;
 	int rl_scan_idx;
-
-	//Read from FLASH
-//	LOCK_FLASH(FLASH_Mutex);
-//	FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
-//	UNLOCK_FLASH(FLASH_Mutex);
+	char rl_status[16] = {0};
 	while(TRUE)
 	{
-		if(pdTRUE == xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ))
-		{
-			LCD_write_number(5,0,stTimeset.uiTON,0);
-			LCD_write_number(5,8,stTimeset.uiTOFF,0);
-			// Save to Flash
-			LOCK_FLASH(FLASH_Mutex);
-			FlashWriteEEprom(&stTimeset,sizeof(TimerSetting_t));
-			UNLOCK_FLASH(FLASH_Mutex);
-		}
-		else
+		if(pdTRUE != xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ))
 		{
 			//Read from FLASH
 			LOCK_FLASH(FLASH_Mutex);
@@ -512,8 +535,12 @@ static void vRelayTask(void *pvParameters)
 		}
 		for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
 		{
+			sprintf(rl_status,"Relay %d ON  ",rl_scan_idx + 1); 
+			LCD_write_string(5, 0, rl_status,0);			
 			GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_RESET);
 			vTaskDelay(stTimeset.uiTON);
+			sprintf(rl_status,"Relay %d OFF ",rl_scan_idx + 1); 
+			LCD_write_string(5, 0, rl_status,0);			
 			GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_SET);
 			vTaskDelay(stTimeset.uiTOFF);             
 		}        
@@ -576,27 +603,6 @@ void ChangingNumber(u8 *number,u8 key)
 	*number = tmp_num;
 }
 
-char *Menu[] = 
-{
-	"TON",
-	"TOFF",
-	"OK"
-};
-void DisplayCursorStr(int row)
-{
-	int i;
-	for (i = 0; i < 3; i++)
-	{
-		if(i == row) 
-		{
-			LCD_write_string(i+2,0,Menu[i],1);
-		}else
-		{
-			LCD_write_string(i+2,0,Menu[i],0);    
-		}
-		
-	}
-}
 static void prvSetupHardware(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
