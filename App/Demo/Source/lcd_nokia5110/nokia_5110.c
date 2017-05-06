@@ -43,6 +43,8 @@ void delay_nms(unsigned int n)       //N ms延时函数
 
 void LCD_init(void)
 {
+
+//    GPIO_WriteBit(GPIOA,GPIO_Pin_8,Bit_SET);//LCD_RST = 0;
     GPIO_WriteBit(GPIOC,GPIO_Pin_7,Bit_SET);//LCD_RST = 0;
     // 产生一个让LCD复位的低电平脉冲
     GPIO_WriteBit(GPIO_LCD_RST_PORT,GPIO_LCD_RST,Bit_RESET);//LCD_RST = 0;

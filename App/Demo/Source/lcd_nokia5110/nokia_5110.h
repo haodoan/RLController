@@ -12,25 +12,25 @@
 #define NO_TEM "no template"
 
 
-#define RCC_SCLK                                        RCC_APB2Periph_GPIOC		 /*按键1使用的GPIO时钟*/
+#define RCC_SCLK                                        RCC_APB2Periph_GPIOA		 /*按键1使用的GPIO时钟*/
 #define GPIO_SCLK_PORT                                  GPIOA    					 /*按键1使用的GPIO组*/
-#define GPIO_SCLK                                       GPIO_Pin_5					 /*按键1连接的GPIO管脚号*/
+#define GPIO_SCLK                                       GPIO_Pin_7					 /*按键1连接的GPIO管脚号*/
 
-#define RCC_SDIN                                        RCC_APB2Periph_GPIOC	     /*按键2使用的GPIO时钟*/
+#define RCC_SDIN                                        RCC_APB2Periph_GPIOA	     /*按键2使用的GPIO时钟*/
 #define GPIO_SDIN_PORT                                  GPIOA  						 /*按键2使用的GPIO组*/
-#define GPIO_SDIN                                       GPIO_Pin_7				     /*按键2连接的GPIO管脚号*/
+#define GPIO_SDIN                                       GPIO_Pin_6				     /*按键2连接的GPIO管脚号*/
 
-#define RCC_LCD_DC                                      RCC_APB2Periph_GPIOC		 /*按键1使用的GPIO时钟*/
-#define GPIO_LCD_DC_PORT                                GPIOC    					 /*按键1使用的GPIO组*/
-#define GPIO_LCD_DC                                     GPIO_Pin_8					 /*按键1连接的GPIO管脚号*/
+#define RCC_LCD_DC                                      RCC_APB2Periph_GPIOA		 /*按键1使用的GPIO时钟*/
+#define GPIO_LCD_DC_PORT                                GPIOA    					 /*按键1使用的GPIO组*/
+#define GPIO_LCD_DC                                     GPIO_Pin_5					 /*按键1连接的GPIO管脚号*/
 
-#define RCC_LCD_CE                                      RCC_APB2Periph_GPIOC	     /*按键2使用的GPIO时钟*/
+#define RCC_LCD_CE                                      RCC_APB2Periph_GPIOA	     /*按键2使用的GPIO时钟*/
 #define GPIO_LCD_CE_PORT                                GPIOA  						 /*按键2使用的GPIO组*/
-#define GPIO_LCD_CE                                     GPIO_Pin_11				     /*按键2连接的GPIO管脚号*/
+#define GPIO_LCD_CE                                     GPIO_Pin_4				     /*按键2连接的GPIO管脚号*/
 
-#define RCC_LCD_RST                                     RCC_APB2Periph_GPIOC	     /*按键2使用的GPIO时钟*/
+#define RCC_LCD_RST                                     RCC_APB2Periph_GPIOA	     /*按键2使用的GPIO时钟*/
 #define GPIO_LCD_RST_PORT                               GPIOA  						 /*按键2使用的GPIO组*/
-#define GPIO_LCD_RST                                    GPIO_Pin_12				     /*按键2连接的GPIO管脚号*/
+#define GPIO_LCD_RST                                    GPIO_Pin_3				     /*按键2连接的GPIO管脚号*/
 
 
 

@@ -157,9 +157,6 @@ RELAY_Output_t RELAY_OUTPUT_MAPPING[] =
 {
 	{GPIOB, GPIO_Pin_0},
 	{GPIOB, GPIO_Pin_1},
-	{GPIOB, GPIO_Pin_2},
-	{GPIOB, GPIO_Pin_3},
-	{GPIOB, GPIO_Pin_4},
 	{GPIOB, GPIO_Pin_5},
 	{GPIOB, GPIO_Pin_6},
 	{GPIOB, GPIO_Pin_7},
@@ -168,13 +165,15 @@ RELAY_Output_t RELAY_OUTPUT_MAPPING[] =
 	{GPIOB, GPIO_Pin_10},
 	{GPIOB, GPIO_Pin_11},
 	{GPIOB, GPIO_Pin_12},
+	{GPIOB, GPIO_Pin_13},
+	{GPIOB, GPIO_Pin_14},    
 };
 
 KEYBOARD_Input_t KEY_GPIO_MAPPING[] = 
 {
-	{GPIOC, GPIO_Pin_0},
-	{GPIOC, GPIO_Pin_2},
-	{GPIOC, GPIO_Pin_4}    
+	{GPIOA, GPIO_Pin_0},
+	{GPIOA, GPIO_Pin_2},
+	{GPIOA, GPIO_Pin_1}    
 };
 
 enum
@@ -261,10 +260,6 @@ int main(void)
 	LCD_clear();
 
 	LCD_write_string(0, 0, "SETTING TIME",1);
-	LCD_write_string(2, 0, "TON  :1234 ms",0);
-	LCD_write_string(3, 0, "TOFF :5678 ms",0);
-	LCD_write_string(4, 6, "OK",0);
-
  
 	qTLTimeOnOff = xQueueCreate(20, sizeof(TimerSetting_t));
 	if (qTLTimeOnOff == NULL)
@@ -302,24 +297,42 @@ static void vKeyboardTask(void *pvParameters)
 	static u8 time_unit = 0;
 	u8 key;
 	u8 SettingAccept = FALSE;
-	TimerSetting_t stTimeSet = {1234,1000};
+	TimerSetting_t stTimeSet = {1000,1000};
 	char buff[5] = {0};
+	char buff_lcd[16] = {0};
 		
 	//Read setting from FLASH
 	//Read from FLASH
+		
 	LOCK_FLASH(FLASH_Mutex);
 	FlashReadEEprom(&stTimeSet,sizeof(TimerSetting_t));
 	UNLOCK_FLASH(FLASH_Mutex);
 
-	nghin[0] = stTimeset.uiTON/1000;
-	tram[0] = (stTimeset.uiTON/100)%10;
-	chuc[0] = (stTimeset.uiTON%100)/10;
-	dv[0] = (stTimeset.uiTON%100)%10;
+	if(stTimeSet.uiTON == 0xFFFFFFFF)
+	{
+		stTimeSet.uiTON = 1000;
+	}
+	if(stTimeSet.uiTOFF == 0xFFFFFFFF)
+	{
+		stTimeSet.uiTOFF = 1000;
+	}
+	sprintf(buff_lcd,"TON  :%04d ms",stTimeSet.uiTON);
+	LCD_write_string(2, 0, buff_lcd,0);
+	sprintf(buff_lcd,"TOFF :%04d ms",stTimeSet.uiTOFF);
+	LCD_write_string(3, 0, buff_lcd,0);
+	LCD_write_string(4, 6, "OK",0);
 
-	nghin[1] = stTimeset.uiTOFF/1000;
-	tram[1] = (stTimeset.uiTOFF/100)%10;
-	chuc[1] = (stTimeset.uiTOFF%100)/10;
-	dv[1] = (stTimeset.uiTOFF%100)%10;	
+	xQueueSend(qTLTimeOnOff,&stTimeSet,10);
+
+	nghin[0] = stTimeSet.uiTON/1000;
+	tram[0] = (stTimeSet.uiTON/100)%10;
+	chuc[0] = (stTimeSet.uiTON%100)/10;
+	dv[0] = (stTimeSet.uiTON%100)%10;
+
+	nghin[1] = stTimeSet.uiTOFF/1000;
+	tram[1] = (stTimeSet.uiTOFF/100)%10;
+	chuc[1] = (stTimeSet.uiTOFF%100)/10;
+	dv[1] = (stTimeSet.uiTOFF%100)%10;	
 
 	while(TRUE)
 	{
@@ -411,12 +424,14 @@ static void vKeyboardTask(void *pvParameters)
 					if(row_offset == 0)
 					{
 						 stTimeSet.uiTON = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
-						 LCD_write_number(3,6,nghin[row_offset],1);
+						 if(time_unit) stTimeSet.uiTON = stTimeSet.uiTON*1000;
+						 LCD_write_number(3,6,nghin[1],1);
 						 //KeyEnter = 0;
 					}
 					else if(row_offset == 1)
 					{
 						 stTimeSet.uiTOFF = nghin[row_offset]*1000+ tram[row_offset]*100 + chuc[row_offset]*10 + dv[row_offset];
+						 if(time_unit) stTimeSet.uiTOFF = stTimeSet.uiTOFF*1000;
 						 KeyEnter = 3;
 						 
 					}
@@ -451,6 +466,12 @@ static void vKeyboardTask(void *pvParameters)
 						// Send message queue Time setting to RELAY task
 						xQueueSend(qTLTimeOnOff,&stTimeSet,10);
 					}
+					else
+					{
+						//LCD_write_string(4, 6, "OK  ",0);
+						//KeyEnter = 0;
+						//SettingAccept = FALSE;
+					}
 					//Send offset
 					//
 					break;
@@ -468,9 +489,9 @@ static void vRelayTask(void *pvParameters)
 	int rl_scan_idx;
 
 	//Read from FLASH
-	LOCK_FLASH(FLASH_Mutex);
-	FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
-	UNLOCK_FLASH(FLASH_Mutex);
+//	LOCK_FLASH(FLASH_Mutex);
+//	FlashReadEEprom(&stTimeset,sizeof(TimerSetting_t));
+//	UNLOCK_FLASH(FLASH_Mutex);
 	while(TRUE)
 	{
 		if(pdTRUE == xQueueReceive( qTLTimeOnOff, &stTimeset, ( TickType_t ) 5 ))
@@ -479,7 +500,7 @@ static void vRelayTask(void *pvParameters)
 			LCD_write_number(5,8,stTimeset.uiTOFF,0);
 			// Save to Flash
 			LOCK_FLASH(FLASH_Mutex);
-			FlashWriteEEprom(stTimeset,sizeof(TimerSetting_t));
+			FlashWriteEEprom(&stTimeset,sizeof(TimerSetting_t));
 			UNLOCK_FLASH(FLASH_Mutex);
 		}
 		else
@@ -491,9 +512,9 @@ static void vRelayTask(void *pvParameters)
 		}
 		for(rl_scan_idx = 0;rl_scan_idx < RL_NUMBER_MAX;rl_scan_idx++)
 		{
-			GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_SET);
-			vTaskDelay(stTimeset.uiTON);
 			GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_RESET);
+			vTaskDelay(stTimeset.uiTON);
+			GPIO_WriteBit(RELAY_OUTPUT_MAPPING[rl_scan_idx].port,RELAY_OUTPUT_MAPPING[rl_scan_idx].pin, Bit_SET);
 			vTaskDelay(stTimeset.uiTOFF);             
 		}        
 	}
@@ -641,22 +662,25 @@ static void prvSetupHardware(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
-	/*Initial for led and BL*/
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7 | GPIO_Pin_8;
+	/*Initial for BL*/
+	/*Initial for lcd AND BL*/
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3|GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7|GPIO_Pin_8;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-	/*Initial for PWKEY*/
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_All;// &(GPIO_Pin_2 | GPIO_Pin_3 | GPIO_Pin_4) ;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	
 	// vParTestInitialise();
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_2 | GPIO_Pin_4;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);    
+	GPIO_Init(GPIOA, &GPIO_InitStructure);    
+
+	GPIO_Write(GPIOB, 0xFFFF);
 }
 
 /*-----------------------------------------------------------*/
